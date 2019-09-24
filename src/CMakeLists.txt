@@ -1,0 +1,13 @@
+PROJECT(main)
+
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+
+AUX_SOURCE_DIRECTORY(. DIR_SRCS)
+
+LINK_DIRECTORIES(CTP_API)
+
+include_directories(CTP_API)
+
+ADD_EXECUTABLE(main ${DIR_SRCS})
+
+TARGET_LINK_LIBRARIES(main thostmduserapi_se.so thosttraderapi_se.so)
