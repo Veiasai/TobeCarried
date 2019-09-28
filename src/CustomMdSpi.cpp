@@ -27,6 +27,7 @@ void CustomMdSpi::OnFrontConnected()
 	strcpy(loginReq.UserID, gInvesterID);
 	strcpy(loginReq.Password, gInvesterPassword);
 	static int requestID = 0; // 请求编号
+	
 	int rt = g_pMdUserApi->ReqUserLogin(&loginReq, requestID);
 	if (!rt)
 		std::cout << ">>>>>>发送登录请求成功" << std::endl;
@@ -193,21 +194,21 @@ void CustomMdSpi::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMar
 	std::cout << "最新价： " << pDepthMarketData->LastPrice << std::endl;
 	std::cout << "数量： " << pDepthMarketData->Volume << std::endl;
 	// 如果只获取某一个合约行情，可以逐tick地存入文件或数据库
-	char filePath[100] = {'\0'};
-	sprintf(filePath, "%s_market_data.csv", pDepthMarketData->InstrumentID);
-	std::ofstream outFile;
-	outFile.open(filePath, std::ios::app); // 文件追加写入 
-	outFile << pDepthMarketData->InstrumentID << "," 
-		<< pDepthMarketData->UpdateTime << "." << pDepthMarketData->UpdateMillisec << "," 
-		<< pDepthMarketData->LastPrice << "," 
-		<< pDepthMarketData->Volume << "," 
-		<< pDepthMarketData->BidPrice1 << "," 
-		<< pDepthMarketData->BidVolume1 << "," 
-		<< pDepthMarketData->AskPrice1 << "," 
-		<< pDepthMarketData->AskVolume1 << "," 
-		<< pDepthMarketData->OpenInterest << "," 
-		<< pDepthMarketData->Turnover << std::endl;
-	outFile.close();
+	// char filePath[100] = {'\0'};
+	// sprintf(filePath, "%s_market_data.csv", pDepthMarketData->InstrumentID);
+	// std::ofstream outFile;
+	// outFile.open(filePath, std::ios::app); // 文件追加写入 
+	// outFile << pDepthMarketData->InstrumentID << "," 
+	// 	<< pDepthMarketData->UpdateTime << "." << pDepthMarketData->UpdateMillisec << "," 
+	// 	<< pDepthMarketData->LastPrice << "," 
+	// 	<< pDepthMarketData->Volume << "," 
+	// 	<< pDepthMarketData->BidPrice1 << "," 
+	// 	<< pDepthMarketData->BidVolume1 << "," 
+	// 	<< pDepthMarketData->AskPrice1 << "," 
+	// 	<< pDepthMarketData->AskVolume1 << "," 
+	// 	<< pDepthMarketData->OpenInterest << "," 
+	// 	<< pDepthMarketData->Turnover << std::endl;
+	// outFile.close();
 
 	// 计算实时k线
 	std::string instrumentKey = std::string(pDepthMarketData->InstrumentID);

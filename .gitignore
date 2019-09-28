@@ -3,3 +3,11 @@ build
 *.so
 
 .bash_history
+
+.viminfo
+
+*.csv
+
+*.con
+
+.vscode

@@ -28,8 +28,24 @@ time_t lOrderOkTime;
 void CustomTradeSpi::OnFrontConnected()
 {
 	std::cout << "=====建立网络连接成功=====" << std::endl;
-	// 开始登录
-	reqUserLogin();
+	// 开始认证
+	reqUserAuth();
+}
+
+void CustomTradeSpi::OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthenticateField, 
+	CThostFtdcRspInfoField *pRspInfo, 
+	int nRequestID, 
+	bool bIsLast)
+{
+	if (!isErrorRspInfo(pRspInfo))
+	{
+		std::cout << "=====账户认证成功=====" << std::endl;
+		reqUserLogin();
+	}
+	else
+	{
+		std::cout << "=====账户认证失败=====" << std::endl;
+	}
 }
 
 void CustomTradeSpi::OnRspUserLogin(
@@ -245,14 +261,37 @@ bool CustomTradeSpi::isErrorRspInfo(CThostFtdcRspInfoField *pRspInfo)
 	return bResult;
 }
 
+void CustomTradeSpi::reqUserAuth()
+{
+	static int requestID = 0; // 请求编号
+
+	CThostFtdcReqAuthenticateField authReq;
+	memset(&authReq, 0, sizeof(CThostFtdcReqAuthenticateField));
+	strcpy(authReq.BrokerID, gBrokerID);
+	strcpy(authReq.UserID, gInvesterID);
+	// strcpy(authReq.UserProductInfo, UserProductInfo); //产品标识
+	strcpy(authReq.AuthCode, "0000000000000000"); 
+	strcpy(authReq.AppID, "simnow_client_test");
+
+	int rt = g_pTradeUserApi->ReqAuthenticate(&authReq, requestID);
+	if (!rt)
+		std::cout << ">>>>>>发送认证请求成功" << std::endl;
+	else
+		std::cerr << "--->>>发送认证请求失败" << std::endl;
+}
 void CustomTradeSpi::reqUserLogin()
 {
+	static int requestID = 0; // 请求编号
+	// changePwd();
+
 	CThostFtdcReqUserLoginField loginReq;
 	memset(&loginReq, 0, sizeof(loginReq));
 	strcpy(loginReq.BrokerID, gBrokerID);
 	strcpy(loginReq.UserID, gInvesterID);
 	strcpy(loginReq.Password, gInvesterPassword);
-	static int requestID = 0; // 请求编号
+
+
+
 	int rt = g_pTradeUserApi->ReqUserLogin(&loginReq, requestID);
 	if (!rt)
 		std::cout << ">>>>>>发送登录请求成功" << std::endl;
@@ -260,6 +299,23 @@ void CustomTradeSpi::reqUserLogin()
 		std::cerr << "--->>>发送登录请求失败" << std::endl;
 }
 
+void CustomTradeSpi::changePwd()
+{
+	static int requestID = 0; // 请求编号
+	// change password at the first time
+	CThostFtdcUserPasswordUpdateField pwdReq;
+	memset(&pwdReq, 0, sizeof(pwdReq));
+	strcpy(pwdReq.BrokerID, gBrokerID);
+	strcpy(pwdReq.UserID, gInvesterID);
+	strcpy(pwdReq.OldPassword, "4465q77");
+	strcpy(pwdReq.NewPassword, "incongruous");
+
+	int rt = g_pTradeUserApi->ReqUserPasswordUpdate(&pwdReq, requestID);
+	if (!rt)
+		std::cout << ">>>>>>发送修改密码请求成功" << std::endl;
+	else
+		std::cerr << "--->>>发送修改密码请求失败" << std::endl;
+}
 void CustomTradeSpi::reqUserLogout()
 {
 	CThostFtdcUserLogoutField logoutReq;

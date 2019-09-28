@@ -1,13 +1,15 @@
 PROJECT(main)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_BUILD_TYPE "Debug")
+set(CTP_LIB_VERSION "v_info_6.3.15_P2_20190403_exec_6.3.15_20190220")
+
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+
+add_subdirectory(CTP_API)
 
 AUX_SOURCE_DIRECTORY(. DIR_SRCS)
 
-LINK_DIRECTORIES(CTP_API)
-
-include_directories(CTP_API)
-
 ADD_EXECUTABLE(main ${DIR_SRCS})
 
-TARGET_LINK_LIBRARIES(main thostmduserapi_se.so thosttraderapi_se.so)
+TARGET_LINK_LIBRARIES(main ctp_exec_lib_${CTP_LIB_VERSION} ctp_info_lib_${CTP_LIB_VERSION})

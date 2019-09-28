@@ -2,7 +2,7 @@
 // ---- 简单策略交易的类 ---- //
 
 #include <functional>
-#include "CTP_API/ThostFtdcUserApiStruct.h"
+#include "CTP_API/inc/ThostFtdcUserApiStruct.h"
 #include "TickToKlineHelper.h"
 #include "CustomTradeSpi.h"
 
