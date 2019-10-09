@@ -13,6 +13,7 @@ using namespace std;
 TThostFtdcBrokerIDType gBrokerID = "9999";                         // 模拟经纪商代码
 TThostFtdcInvestorIDType gInvesterID = "152100";                         // 投资者账户名
 TThostFtdcPasswordType gInvesterPassword = "incongruous";                     // 投资者密码
+TThostFtdcExchangeIDType gExchangeID = "DCE";   
 
 // 行情参数
 CThostFtdcMdApi *g_pMdUserApi = nullptr;                           // 行情指针
@@ -26,7 +27,7 @@ CThostFtdcTraderApi *g_pTradeUserApi = nullptr;                    // 交易指�
 char gTradeFrontAddr[] = "tcp://180.168.146.187:10100";            // 模拟交易前置地址
 TThostFtdcInstrumentIDType g_pTradeInstrumentID = "i2001";        // 所交易的合约代码
 TThostFtdcDirectionType gTradeDirection = THOST_FTDC_D_Sell;       // 买卖方向
-TThostFtdcPriceType gLimitPrice = 22735;                           // 交易价格
+TThostFtdcPriceType gLimitPrice = 700;                           // 交易价格
 
 int main()
 {
@@ -55,21 +56,21 @@ int main()
 	g_pTradeUserApi->SubscribePrivateTopic(THOST_TERT_RESTART);   // 订阅私有流
 	g_pTradeUserApi->RegisterFront(gTradeFrontAddr);              // 设置交易前置地址
 	g_pTradeUserApi->Init();                                      // 连接运行
-		
+
 
 	// 等到线程退出
 	g_pMdUserApi->Join();
 	delete pMdUserSpi;
 	g_pMdUserApi->Release();
 
-	g_pTradeUserApi->Join();
-	delete pTradeSpi;
-	g_pTradeUserApi->Release();
+	// g_pTradeUserApi->Join();
+	// delete pTradeSpi;
+	// g_pTradeUserApi->Release();
 
 	// 转换本地k线数据
-	TickToKlineHelper tickToKlineHelper;
-	tickToKlineHelper.KLineFromLocalData("market_data.csv", "K_line_data.csv");
+	// TickToKlineHelper tickToKlineHelper;
+	// tickToKlineHelper.KLineFromLocalData("market_data.csv", "K_line_data.csv");
 	
-	getchar();
+	// getchar();
 	return 0;
 }

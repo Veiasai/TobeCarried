@@ -114,22 +114,22 @@ void CustomMdSpi::OnRspSubMarketData(
 		std::cout << "=====订阅行情成功=====" << std::endl;
 		std::cout << "合约代码： " << pSpecificInstrument->InstrumentID << std::endl;
 		// 如果需要存入文件或者数据库，在这里创建表头,不同的合约单独存储
-		char filePath[100] = {'\0'};
-		sprintf(filePath, "%s_market_data.csv", pSpecificInstrument->InstrumentID);
-		std::ofstream outFile;
-		outFile.open(filePath, std::ios::out); // 新开文件
-		outFile << "合约代码" << ","
-			<< "更新时间" << ","
-			<< "最新价" << ","
-			<< "成交量" << ","
-			<< "买价一" << ","
-			<< "买量一" << ","
-			<< "卖价一" << ","
-			<< "卖量一" << ","
-			<< "持仓量" << ","
-			<< "换手率"
-			<< std::endl;
-		outFile.close();
+		// char filePath[100] = {'\0'};
+		// sprintf(filePath, "%s_market_data.csv", pSpecificInstrument->InstrumentID);
+		// std::ofstream outFile;
+		// outFile.open(filePath, std::ios::out); // 新开文件
+		// outFile << "合约代码" << ","
+		// 	<< "更新时间" << ","
+		// 	<< "最新价" << ","
+		// 	<< "成交量" << ","
+		// 	<< "买价一" << ","
+		// 	<< "买量一" << ","
+		// 	<< "卖价一" << ","
+		// 	<< "卖量一" << ","
+		// 	<< "持仓量" << ","
+		// 	<< "换手率"
+		// 	<< std::endl;
+		// outFile.close();
 	}
 	else
 		std::cerr << "返回错误--->>> ErrorID=" << pRspInfo->ErrorID << ", ErrorMsg=" << pRspInfo->ErrorMsg << std::endl;
@@ -211,10 +211,10 @@ void CustomMdSpi::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMar
 	// outFile.close();
 
 	// 计算实时k线
-	std::string instrumentKey = std::string(pDepthMarketData->InstrumentID);
-	if (g_KlineHash.find(instrumentKey) == g_KlineHash.end())
-		g_KlineHash[instrumentKey] = TickToKlineHelper();
-	g_KlineHash[instrumentKey].KLineFromRealtimeData(pDepthMarketData);
+	// std::string instrumentKey = std::string(pDepthMarketData->InstrumentID);
+	// if (g_KlineHash.find(instrumentKey) == g_KlineHash.end())
+	// 	g_KlineHash[instrumentKey] = TickToKlineHelper();
+	// g_KlineHash[instrumentKey].KLineFromRealtimeData(pDepthMarketData);
 
 
 	// 取消订阅行情

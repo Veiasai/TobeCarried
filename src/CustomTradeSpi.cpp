@@ -7,6 +7,7 @@
 #include <cstring>
 
 // ---- 全局参数声明 ---- //
+extern TThostFtdcExchangeIDType gExchangeID;
 extern TThostFtdcBrokerIDType gBrokerID;                      // 模拟经纪商代码
 extern TThostFtdcInvestorIDType gInvesterID;                  // 投资者账户名
 extern TThostFtdcPasswordType gInvesterPassword;              // 投资者密码
@@ -187,7 +188,8 @@ void CustomTradeSpi::OnRspQryInvestorPosition(
 
 		// 策略交易
 		std::cout << "=====开始进入策略交易=====" << std::endl;
-		while (loginFlag)
+		// while (loginFlag)
+		reqOrderInsert(g_pTradeInstrumentID, 660, 1, THOST_FTDC_D_Buy);
 			StrategyCheckAndTrade(g_pTradeInstrumentID, this);
 	}
 }
@@ -444,6 +446,8 @@ void CustomTradeSpi::reqOrderInsert(
 {
 	CThostFtdcInputOrderField orderInsertReq;
 	memset(&orderInsertReq, 0, sizeof(orderInsertReq));
+	///交易所代码
+	strcpy(orderInsertReq.ExchangeID, gExchangeID);
 	///经纪公司代码
 	strcpy(orderInsertReq.BrokerID, gBrokerID);
 	///投资者代码
