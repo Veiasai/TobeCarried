@@ -11,3 +11,5 @@ build
 *.con
 
 .vscode
+
+.DS_Store

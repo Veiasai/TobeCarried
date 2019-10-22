@@ -8,7 +8,7 @@
 
 4. LXC
 
-5. beyond-lib, include a extra lib, and replace some neccessary lines, then will 
+5. beyond-lib, include a extra lib, and replace some neccessary lines.
 
 6. seccomp
 
