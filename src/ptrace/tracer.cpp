@@ -27,6 +27,7 @@ void Tracer::run(/* args */)
         spdlog::info("Thread {} traps", tid);
 
         if (tracees.find(tid) == tracees.end()){
+            spdlog::info("Add Thread {} to tracees", tid);
             tracees[tid] = std::make_unique<Tracee>(tid);
         }
         tracees[tid]->trap();
