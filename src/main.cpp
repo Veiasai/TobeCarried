@@ -57,7 +57,6 @@ int main()
 	g_pTradeUserApi->RegisterFront(gTradeFrontAddr);              // 设置交易前置地址
 	g_pTradeUserApi->Init();                                      // 连接运行
 
-
 	// 等到线程退出
 	g_pMdUserApi->Join();
 	delete pMdUserSpi;

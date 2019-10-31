@@ -1,3 +1,6 @@
 [submodule "strace"]
 	path = strace
 	url = git@github.com:strace/strace.git
+[submodule "src/spdlog"]
+	path = src/spdlog
+	url = https://github.com/gabime/spdlog.git

@@ -1,10 +1,7 @@
 PROJECT(ptrace)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-set(CMAKE_BUILD_TYPE "Debug")
-
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
-
 AUX_SOURCE_DIRECTORY(. DIR_SRCS)
 
 ADD_EXECUTABLE(ptrace ${DIR_SRCS})
+
+target_link_libraries(ptrace PRIVATE spdlog::spdlog)
