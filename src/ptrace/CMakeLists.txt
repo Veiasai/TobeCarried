@@ -1,7 +1,6 @@
 PROJECT(ptrace)
 
-AUX_SOURCE_DIRECTORY(. DIR_SRCS)
+add_subdirectory(tests)
+add_subdirectory(app)
 
-ADD_EXECUTABLE(ptrace ${DIR_SRCS})
 
-target_link_libraries(ptrace PRIVATE spdlog::spdlog)

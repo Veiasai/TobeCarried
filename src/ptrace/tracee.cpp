@@ -9,25 +9,23 @@
 #include "tracee.h"
 #include "utils.h"
 
-Tracee::Tracee(int tid) : tid(tid)
+namespace SAIL { namespace core {
+
+TraceeImpl::TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp) : tid(tid), up(up), cp(cp)
 {
     this->iscalling = true;
 }
 
-Tracee::~Tracee()
-{
-}
-
-void Tracee::trap()
+void TraceeImpl::trap()
 {  
-    long orig_rax = ptrace(PTRACE_PEEKUSER, this->tid, 8*ORIG_RAX, NULL);
+    long orig_rax = cp->peekUser(this->tid, 8*ORIG_RAX);
     spdlog::info("syscall {} in tid {}", orig_rax, this->tid);
 
     if (this->iscalling) {
         this->history.emplace_back();
-        ptrace(PTRACE_GETREGS, this->tid, NULL, &this->history.back().call_regs);
+        cp->getRegs(this->tid, &this->history.back().call_regs);
     } else {
-        ptrace(PTRACE_GETREGS, this->tid, NULL, &this->history.back().ret_regs);
+        cp->getRegs(this->tid, &this->history.back().ret_regs);
     }
 
     switch (orig_rax)
@@ -54,43 +52,43 @@ void Tracee::trap()
 }
 
 // file
-void Tracee::open()
+void TraceeImpl::open()
 {
     if (this->iscalling){
         const char * filename = (char *)this->history.back().call_regs.rdi;
         char buf[256];
-        int r = readStrFrom(this->tid, filename, buf, 255);
+        int r = up->readStrFrom(this->tid, filename, buf, 255);
 
         spdlog::debug("Open: filename: {}", buf);
     } else {
 
     }
 }
-void Tracee::read()
+void TraceeImpl::read()
 {
 
 }
-void Tracee::write()
+void TraceeImpl::write()
 {
 
 }
 
 // net
-void Tracee::connect()
+void TraceeImpl::connect()
 {
 
 }
-void Tracee::recvfrom()
+void TraceeImpl::recvfrom()
 {
 
 }
-void Tracee::sendto()
+void TraceeImpl::sendto()
 {
 
 }
 
 // clone
-void Tracee::clone()
+void TraceeImpl::clone()
 {
     if (this->iscalling) {
         spdlog::info("SYS_clone call in tid %d", this->tid);
@@ -98,8 +96,20 @@ void Tracee::clone()
         long rax = this->history.back().ret_regs.rax;
         if (rax != 0) {
             // return in parent thread (return value in child thread is 0)
-            ptrace(PTRACE_ATTACH, rax, NULL, NULL);
+            cp->attach(rax);
         }
         spdlog::info("SYS_clone call return %lld in tid %d", rax, this->tid);
     }
 }
+
+const std::vector<Systemcall> & TraceeImpl::getHistory()
+{
+    return this->history;
+}
+
+const std::vector<WarnInfo> & TraceeImpl::getReport()
+{
+    return this->report;
+}
+
+}}

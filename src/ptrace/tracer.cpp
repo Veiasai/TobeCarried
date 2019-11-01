@@ -8,7 +8,9 @@
 
 using namespace std;
 
-Tracer::Tracer(/* args */)
+namespace SAIL { namespace core {
+
+Tracer::Tracer(std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp) : up(up), cp(cp)
 {
 }
 
@@ -28,7 +30,7 @@ void Tracer::run(/* args */)
 
         if (tracees.find(tid) == tracees.end()){
             spdlog::info("Add Thread {} to tracees", tid);
-            tracees[tid] = std::make_unique<Tracee>(tid);
+            tracees[tid] = std::make_unique<TraceeImpl>(tid, up, cp);
         }
         tracees[tid]->trap();
 
@@ -36,3 +38,5 @@ void Tracer::run(/* args */)
         ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
     }
 }
+
+}}

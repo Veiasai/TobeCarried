@@ -1,10 +1,16 @@
 #include "utils.h"
-#include <sys/ptrace.h>
 
-int readStrFrom(int tid, const char * p, char * buf, size_t s)
+namespace SAIL { namespace utils {
+
+UtilsImpl::UtilsImpl(std::shared_ptr<CustomPtrace> _cp) : cp(_cp)
+{
+
+}
+
+int UtilsImpl::readStrFrom(int tid, const char * p, char * buf, size_t s)
 {
     for(int i=0;i<s;i++){
-        long val = ptrace(PTRACE_PEEKDATA, tid, p+i*sizeof(long), NULL);
+        long val = this->cp->peekData(tid, (long)p+i*sizeof(long));
         char * c = (char *)&val;
         for (int j=0; j<8; j++){
             buf[i*sizeof(long)+j] = c[j];
@@ -16,16 +22,16 @@ int readStrFrom(int tid, const char * p, char * buf, size_t s)
     return -1;
 }
 
-int readBytesFrom(int tid, const char * p, char * buf, size_t s)
+int UtilsImpl::readBytesFrom(int tid, const char * p, char * buf, size_t s)
 {
     size_t count = 0;
     while(s - count > 8){
-        *(long *)(buf + count) = ptrace(PTRACE_PEEKDATA, tid, p+count, NULL);
+        *(long *)(buf + count) = this->cp->peekData(tid, (long)p+count);
         count += 8;
     }
 
     if(s - count > 0){
-        long data = ptrace(PTRACE_PEEKDATA, tid, p+count, NULL);
+        long data = this->cp->peekData(tid, (long)p+count);
         char * bdata = (char *)&data;
         for (int i=0; count+i<s; i++){
             buf[count+i] = bdata[i];
@@ -34,3 +40,25 @@ int readBytesFrom(int tid, const char * p, char * buf, size_t s)
     }
     return 0;
 }
+
+long CustomPtraceImpl::peekUser(int tid, long addr)
+{
+    return ptrace(PTRACE_PEEKUSER, tid, addr, NULL);
+}
+
+long CustomPtraceImpl::getRegs(int tid, user_regs_struct * regs)
+{
+    return ptrace(PTRACE_GETREGS, tid, NULL, regs);
+}
+
+long CustomPtraceImpl::peekData(int tid, long addr)
+{
+    return ptrace(PTRACE_PEEKDATA, tid, addr, NULL);
+}
+
+long CustomPtraceImpl::attach(int tid)
+{
+    return ptrace(PTRACE_ATTACH, tid, NULL, NULL);
+}
+
+}}

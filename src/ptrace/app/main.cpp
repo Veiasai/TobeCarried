@@ -8,10 +8,12 @@
 
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/basic_file_sink.h"
-#include "tracer.h"
-#include "tracee.h"
+#include "../tracer.h"
+#include "../tracee.h"
+#include "../utils.h"
 
 using namespace std;
+using namespace SAIL;
 
 void initLogger(const char * logLevel) {
     // TODO
@@ -39,7 +41,10 @@ int main(int argc,char **argv){
     initLogger(argv[2]);
     startChild(argv[1]);
     
-    auto tracer = std::make_unique<Tracer>();
+    std::shared_ptr<utils::CustomPtrace> cp = std::make_shared<utils::CustomPtraceImpl>();
+    std::shared_ptr<utils::Utils> up = std::make_shared<utils::UtilsImpl>(cp);
+
+    auto tracer = std::make_unique<core::Tracer>(up, cp);
     tracer->run();
 
     return 0;
