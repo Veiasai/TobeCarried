@@ -74,7 +74,7 @@ int main(int argc,char **argv){
                 }                                  
             }
 
-            // wake up child parent
+            // wake up child process
             ptrace(PTRACE_SYSCALL, tid_return, NULL, NULL);
         }
     }
