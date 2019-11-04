@@ -1,17 +1,23 @@
 #include <string>
+#include <stdio.h>
 #include <fstream>
 #include <iostream>
 
 using namespace std;
 
-//  open func check
+void error(const string msg)
+{
+    perror(msg.c_str());
+    exit(1);
+}
+
+//  close func check
 //  filename
 int main(int argc, char *argv[])
 {
     if (argc < 2)
     {
-        cerr << "Please enter filename!" << endl;
-        return -1;
+        error("Please enter filename!\n");
     }
 
     string filename = argv[1];
@@ -23,7 +29,7 @@ int main(int argc, char *argv[])
 
     if (!fs.is_open())
     {
-        cerr << "Error open!" << endl;
+        cerr<<"Error open!"<<endl;
         fs.clear();
         return -1;
     }
@@ -31,7 +37,7 @@ int main(int argc, char *argv[])
     fs.close();
     if (fs.is_open())
     {
-        cerr << "Error close!"<<endl;
+        error( "Error close!\n");
     }
 
     return 0;

@@ -1,17 +1,23 @@
 #include <string>
+#include <stdio.h>
 #include <fstream>
 #include <iostream>
 
 using namespace std;
 
+void error(const string msg)
+{
+    perror(msg.c_str());
+    exit(1);
+}
+
 //  open func check
 //  filename filecontent
 int main(int argc, char *argv[])
 {
-    if (argc < 2)
+    if (argc < 3)
     {
-        cerr << "Please enter filename!" << endl;
-        return -1;
+        error("Please enter filename and content!\n");
     }
 
     string filename = argv[1];

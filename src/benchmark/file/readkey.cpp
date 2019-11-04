@@ -1,8 +1,15 @@
 #include <string>
+#include <stdio.h>
 #include <fstream>
 #include <iostream>
 
 using namespace std;
+
+void error(const string msg)
+{
+    perror(msg.c_str());
+    exit(1);
+}
 
 //  read func check
 //  filename
@@ -10,9 +17,9 @@ int main(int argc, char *argv[])
 {
     if (argc < 2)
     {
-        cerr << "Please enter filename!" << endl;
-        return -1;
+        error("Please enter filename!\n");
     }
+    
     string filename = argv[1];
 
     fstream fs;
