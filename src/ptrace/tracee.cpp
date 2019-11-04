@@ -76,7 +76,12 @@ void TraceeImpl::read()
 }
 void TraceeImpl::write()
 {
-    
+    if (this->iscalling) {
+        const int fd = (int)this->history.back().call_regs.rdi;
+        const char *filename = fdToFilename[fd];
+
+        spdlog::debug("Write: filename: {}", filename);
+    }
 }
 
 // net
