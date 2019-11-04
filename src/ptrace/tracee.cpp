@@ -18,7 +18,7 @@ TraceeImpl::TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_pt
 
 void TraceeImpl::trap()
 {  
-    long orig_rax = cp->peekUser(this->tid, 8*ORIG_RAX);
+    long orig_rax = cp->peekUser(this->tid, 8 * ORIG_RAX);
     spdlog::info("syscall {} in tid {}", orig_rax, this->tid);
 
     if (this->iscalling) {

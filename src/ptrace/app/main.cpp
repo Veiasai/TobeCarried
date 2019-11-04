@@ -27,7 +27,7 @@ void startChild(const char * target) {
         int childLogFd = open("/dev/null", O_WRONLY);
         dup2(childLogFd, 1);
         dup2(childLogFd, 2);
-        ptrace(PTRACE_TRACEME,0,NULL,NULL);
+        ptrace(PTRACE_TRACEME, 0, NULL, NULL);
         execvp(target, NULL);
     }
 }
@@ -38,8 +38,8 @@ int main(int argc,char **argv){
         return -1;
     }
 
-    initLogger(argv[2]);
     startChild(argv[1]);
+    initLogger(argv[2]);
     
     std::shared_ptr<utils::CustomPtrace> cp = std::make_shared<utils::CustomPtraceImpl>();
     std::shared_ptr<utils::Utils> up = std::make_shared<utils::UtilsImpl>(cp);
