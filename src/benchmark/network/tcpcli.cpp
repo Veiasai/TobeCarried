@@ -63,6 +63,7 @@ void recv_msg(int &sockfd)
     cout << "MSG: " << buffer << endl;
 }
 
+// ./tcpsvr.o <port>
 int main(int argc, char *argv[])
 {
     int sockfd, portno;

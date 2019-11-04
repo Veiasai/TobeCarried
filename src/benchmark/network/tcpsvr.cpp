@@ -62,6 +62,7 @@ void recv_msg(int &sockfd)
     cout << "MSG: " << buffer << endl;
 }
 
+// ./tcpcli.o localhost <port>
 int main(int argc, char *argv[])
 {
     int sockfd, newsockfd, portno;
@@ -73,12 +74,14 @@ int main(int argc, char *argv[])
         error("Error: no port provided!\n");
     }
 
+    // build socket
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
     {
         error("Error: cannot open socket!\n");
     }
 
+    // fill sockaddr_in
     bzero((char *)&serv_addr, sizeof(serv_addr));
     portno = atoi(argv[1]);
     serv_addr.sin_family = AF_INET;
