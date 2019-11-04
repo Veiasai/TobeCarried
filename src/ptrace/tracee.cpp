@@ -14,13 +14,23 @@ namespace SAIL { namespace core {
 TraceeImpl::TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp) : tid(tid), up(up), cp(cp)
 {
     this->iscalling = true;
+    this->lastSyscallID = -1;  // -1 means the first syscall
 }
 
 void TraceeImpl::trap()
 {  
     // grab syscall id
     long orig_rax = cp->peekUser(this->tid, 8 * ORIG_RAX);
-    spdlog::info("syscall {} in tid {}", orig_rax, this->tid);
+    spdlog::info("[tid: {}] syscall {}", this->tid, orig_rax);
+
+    if (this->iscalling && orig_rax == lastSyscallID) {
+        // prevent that some syscalls don't return
+        this->iscalling = false;
+    }
+    else if (!this->iscalling) {
+        this->iscalling = true;
+    }
+    this->lastSyscallID = orig_rax;
 
     if (this->iscalling) {
         this->history.emplace_back();
@@ -49,7 +59,6 @@ void TraceeImpl::trap()
             break;
     }
 
-    this->iscalling = !this->iscalling;
 }
 
 // file
@@ -59,9 +68,9 @@ void TraceeImpl::open()
         const char *filename = (char *)this->history.back().call_regs.rdi;
         int r = up->readStrFrom(this->tid, filename, tmpFilename, MAX_FILENAME_SIZE);
 
-        spdlog::debug("Open: filename: {}", tmpFilename);
+        spdlog::debug("[tid: {}] Open: filename: {}", tid, tmpFilename);
     } else {
-        const int fd = (int)this->history.back().ret_regs.rax;
+        const unsigned long long int fd = this->history.back().ret_regs.rax;
         fdToFilename[fd] = tmpFilename;
     }
 }
@@ -71,7 +80,7 @@ void TraceeImpl::read()
         const int fd = (int)this->history.back().call_regs.rdi;
         const char *filename = fdToFilename[fd];
 
-        spdlog::debug("Read: filename: {}", filename);
+        spdlog::debug("[tid: {}] Read: filename: {}", tid, filename);
     }
 }
 void TraceeImpl::write()
@@ -80,7 +89,7 @@ void TraceeImpl::write()
         const int fd = (int)this->history.back().call_regs.rdi;
         const char *filename = fdToFilename[fd];
 
-        spdlog::debug("Write: filename: {}", filename);
+        spdlog::debug("[tid: {}] Write: filename: {}", tid, filename);
     }
 }
 

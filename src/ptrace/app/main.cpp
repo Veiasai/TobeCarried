@@ -33,7 +33,7 @@ void startChild(const char * target) {
 }
 
 int main(int argc,char **argv){
-    if (argc != 3){
+    if (argc != 3) {
         cout << "please input the target file name and log level\n";
         return -1;
     }
