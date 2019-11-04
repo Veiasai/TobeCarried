@@ -18,6 +18,7 @@ TraceeImpl::TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_pt
 
 void TraceeImpl::trap()
 {  
+    // grab syscall id
     long orig_rax = cp->peekUser(this->tid, 8 * ORIG_RAX);
     spdlog::info("syscall {} in tid {}", orig_rax, this->tid);
 
@@ -54,23 +55,28 @@ void TraceeImpl::trap()
 // file
 void TraceeImpl::open()
 {
-    if (this->iscalling){
-        const char * filename = (char *)this->history.back().call_regs.rdi;
-        char buf[256];
-        int r = up->readStrFrom(this->tid, filename, buf, 255);
+    if (this->iscalling) {
+        const char *filename = (char *)this->history.back().call_regs.rdi;
+        int r = up->readStrFrom(this->tid, filename, tmpFilename, MAX_FILENAME_SIZE);
 
-        spdlog::debug("Open: filename: {}", buf);
+        spdlog::debug("Open: filename: {}", tmpFilename);
     } else {
-
+        const int fd = (int)this->history.back().ret_regs.rax;
+        fdToFilename[fd] = tmpFilename;
     }
 }
 void TraceeImpl::read()
 {
+    if (this->iscalling) {
+        const int fd = (int)this->history.back().call_regs.rdi;
+        const char *filename = fdToFilename[fd];
 
+        spdlog::debug("Read: filename: {}", filename);
+    }
 }
 void TraceeImpl::write()
 {
-
+    
 }
 
 // net
