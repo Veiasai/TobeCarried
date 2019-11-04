@@ -4,7 +4,7 @@
 
 using namespace std;
 
-//  read func check
+//  open func check
 //  filename
 int main(int argc, char *argv[])
 {
@@ -13,23 +13,20 @@ int main(int argc, char *argv[])
         cerr << "Please enter filename!" << endl;
         return -1;
     }
+
     string filename = argv[1];
 
     fstream fs;
-    fs.open(filename.c_str(), ios::in);
+    cout << "filename: " << filename << endl;
+
+    fs.open(filename.c_str(), ios::app);
 
     if (!fs.is_open())
     {
+        cerr << "Error open!" << endl;
         fs.clear();
         return -1;
     }
-
-    string content;
-    fs >> content;
-
-    cout << "file content: " << content << endl;
-
-    fs.close();
 
     return 0;
 }

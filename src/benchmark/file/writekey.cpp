@@ -4,8 +4,8 @@
 
 using namespace std;
 
-//  read func check
-//  filename
+//  open func check
+//  filename filecontent
 int main(int argc, char *argv[])
 {
     if (argc < 2)
@@ -13,21 +13,29 @@ int main(int argc, char *argv[])
         cerr << "Please enter filename!" << endl;
         return -1;
     }
+
     string filename = argv[1];
 
     fstream fs;
-    fs.open(filename.c_str(), ios::in);
+    cout << filename << endl;
+
+    fs.open(filename.c_str(), ios::app);
 
     if (!fs.is_open())
     {
+        cerr << "Error open!" << endl;
         fs.clear();
         return -1;
     }
 
-    string content;
-    fs >> content;
+    string filecontent = argv[2];
 
-    cout << "file content: " << content << endl;
+    fs << filecontent;
+
+    fs.seekp(0, fs.end);
+    size_t filesize = fs.tellp();
+
+    cout << "file size: " << filesize << endl;
 
     fs.close();
 
