@@ -3,8 +3,11 @@
 #include <sys/user.h>
 #include <vector>
 #include <memory>
+#include <map>
 
 #include "utils.h"
+
+#define MAX_FILENAME_SIZE 256
 
 namespace SAIL { namespace core {
 
@@ -41,6 +44,13 @@ private:
     std::vector<WarnInfo> report;
     std::shared_ptr<utils::Utils> up;
     std::shared_ptr<utils::CustomPtrace> cp;
+    std::map<int, char *> fdToFilename;
+
+    // for buffering filename to insert into fdToFilename
+    char tmpFilename[MAX_FILENAME_SIZE];
+    // for buffering syscall id to check whether syscall returns
+    long lastSyscallID;
+
     // file
     void open();
     void read();

@@ -11,7 +11,7 @@ using namespace testing;
 using namespace utils;
 using namespace core;
 
-class TraceeFixture: public Test {
+class TraceeFixture: public ::testing::Test {
 public:
     std::shared_ptr<MockCustomPtrace> cp;
     std::shared_ptr<MockUtils> up;

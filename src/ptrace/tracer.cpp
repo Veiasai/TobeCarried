@@ -26,10 +26,10 @@ void Tracer::run(/* args */)
         int tid = wait(&status);
         if(WIFEXITED(status))
             break;
-        spdlog::info("Thread {} traps", tid);
+        spdlog::info("[tid: tracer] Thread {} traps", tid);
 
-        if (tracees.find(tid) == tracees.end()){
-            spdlog::info("Add Thread {} to tracees", tid);
+        if (tracees.find(tid) == tracees.end()) {
+            spdlog::info("[tid: tracer] Add Thread {} to tracees", tid);
             tracees[tid] = std::make_unique<TraceeImpl>(tid, up, cp);
         }
         tracees[tid]->trap();
