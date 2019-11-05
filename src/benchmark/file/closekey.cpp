@@ -12,7 +12,7 @@ void error(const string &msg)
     exit(1);
 }
 
-//  read func check
+//  close func check
 //  filename
 int main(int argc, char *argv[])
 {
@@ -20,24 +20,26 @@ int main(int argc, char *argv[])
     {
         error("Please enter filename!\n");
     }
-    
+
     string filename = argv[1];
 
     fstream fs;
-    fs.open(filename.c_str(), ios::in);
+    cout << "filename: " << filename << endl;
+
+    fs.open(filename.c_str(), ios::app);
 
     if (!fs.is_open())
     {
+        cerr<<"Error open!"<<endl;
         fs.clear();
         return -1;
     }
 
-    string content;
-    fs >> content;
-
-    cout << "file content: " << content << endl;
-
     fs.close();
+    if (fs.is_open())
+    {
+        error( "Error close!\n");
+    }
 
     return 0;
 }
