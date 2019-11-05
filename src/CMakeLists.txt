@@ -11,6 +11,10 @@ add_subdirectory(ptrace)
 add_subdirectory(benchmark)
 add_subdirectory(spdlog)
 
+# GTest
+add_subdirectory(googletest)
+enable_testing()
+
 AUX_SOURCE_DIRECTORY(. DIR_SRCS)
 
 ADD_EXECUTABLE(ctp ${DIR_SRCS})

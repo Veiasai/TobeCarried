@@ -4,13 +4,18 @@
 #include <memory>
 #include "tracee.h"
 
+namespace SAIL { namespace core {
+
 class Tracer
 {
 private:
-    map<int, std::unique_ptr<Tracee>> tracees;
-    /* data */
+    std::map<int, std::unique_ptr<Tracee>> tracees;
+    std::shared_ptr<utils::Utils> up;
+    std::shared_ptr<utils::CustomPtrace> cp;
 public:
-    Tracer(/* args */);
+    Tracer(std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp);
     ~Tracer();
     void run();
 };
+
+}}

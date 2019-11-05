@@ -1,8 +1,15 @@
 #pragma once
+
 #include <sys/user.h>
 #include <vector>
+#include <memory>
+#include <map>
 
-using namespace std;
+#include "utils.h"
+
+#define MAX_FILENAME_SIZE 256
+
+namespace SAIL { namespace core {
 
 struct Systemcall {
     struct user_regs_struct call_regs;
@@ -21,11 +28,29 @@ struct WarnInfo {
 
 class Tracee
 {
+public:
+    virtual ~Tracee() {};
+    virtual void trap() = 0;
+    virtual const std::vector<Systemcall> & getHistory() = 0;
+    virtual const std::vector<WarnInfo> & getReport() = 0;
+};
+
+class TraceeImpl : public Tracee
+{
 private:
     int tid;
     volatile bool iscalling;
-    vector<Systemcall> history;
-    vector<WarnInfo> report;
+    std::vector<Systemcall> history;
+    std::vector<WarnInfo> report;
+    std::shared_ptr<utils::Utils> up;
+    std::shared_ptr<utils::CustomPtrace> cp;
+    std::map<int, char *> fdToFilename;
+
+    // for buffering filename to insert into fdToFilename
+    char tmpFilename[MAX_FILENAME_SIZE];
+    // for buffering syscall id to check whether syscall returns
+    long lastSyscallID;
+
     // file
     void open();
     void read();
@@ -38,9 +63,13 @@ private:
 
     // clone
     void clone();
-
 public:
-    Tracee(int tid);
-    ~Tracee();
-    void trap();
+    TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp);
+    virtual ~TraceeImpl() {};
+    virtual void trap();
+    virtual const std::vector<Systemcall> & getHistory();
+    virtual const std::vector<WarnInfo> & getReport();
 };
+
+}}
+
