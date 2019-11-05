@@ -9,13 +9,13 @@
 #include <iostream>
 using namespace std;
 
-void error(const string msg)
+void error(const string &msg)
 {
     perror(msg.c_str());
     exit(1);
 }
 
-void send_msg(int &sockfd, const string message)
+void send_msg(int &sockfd, const string &message)
 {
     int n = 0;
     int length = message.length();
@@ -39,6 +39,11 @@ void recv_msg(int &sockfd)
     // fisrt accept the length of message
     int length = 0;
     n = read(sockfd, (char *)&length, sizeof(length));
+    if (n == -1 || n != sizeof(length))
+    {
+        error("Read error!");
+    }
+
     cout << "MSG Length: " << length << endl;
     if (n < 0)
     {
@@ -53,6 +58,11 @@ void recv_msg(int &sockfd)
     while (byte_read < length)
     {
         n = read(sockfd, buffer + byte_read, length - byte_read);
+        if (n == -1 || n != sizeof(length))
+        {
+            error("Read error!");
+        }
+
         if (n < 0)
         {
             error("Error: cannot read message from client!\n");

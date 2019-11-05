@@ -1,11 +1,12 @@
 #include <string>
+#include <stdlib.h> 
 #include <stdio.h>
 #include <fstream>
 #include <iostream>
 
 using namespace std;
 
-void error(const string msg)
+void error(const string &msg)
 {
     perror(msg.c_str());
     exit(1);
