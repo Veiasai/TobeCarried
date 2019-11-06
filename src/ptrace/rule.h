@@ -1,12 +1,16 @@
 #pragma once
 
 #include <string>
+#include <vector>
+
+#include "parameter.h"
 
 namespace SAIL { namespace rule {
 
 struct RuleCheckMsg
 {
     bool approval;
+    int ruleID;
     std::string msg;
 };
 
@@ -20,47 +24,43 @@ enum RuleLevel
 struct RuleInfo
 {
     int target_syscall;
+    int ruleID;
     std::string name;
     RuleLevel level;
-};
-
-enum ParameterIndex
-{
-    First,
-    Second,
-    Third,
-    Fourth,
-    Fifth,
-    Sixth,
 };
 
 class Rule
 {
 public:
     virtual ~Rule() {};
-    virtual RuleCheckMsg check() = 0;
+    virtual RuleCheckMsg check(const core::SyscallParameter & sp) = 0;
     virtual RuleInfo info() = 0;
-    virtual int matchRe(bool iscalling, ParameterIndex idx, const std::string & re) = 0; // usually should be a pointer
-    virtual int matchBytes(bool iscalling, ParameterIndex idx, const std::vector<char> & vc) = 0; // usually should be a pointer
-    virtual int equal(ParameterIndex idx, long value) = 0;
-    virtual int greater(ParameterIndex idx, long value) = 0;
-    virtual int notGreater(ParameterIndex idx, long value) = 0;
+    virtual int matchRe(core::ParameterIndex idx, const std::string & re) = 0; // usually should be a pointer
+    virtual int matchBytes(core::ParameterIndex idx, const std::vector<char> & vc) = 0; // usually should be a pointer
+    virtual int equal(core::ParameterIndex idx, long value) = 0;
+    virtual int notEqual(core::ParameterIndex idx, long value) = 0;
+    virtual int greater(core::ParameterIndex idx, long value) = 0;
+    virtual int notGreater(core::ParameterIndex idx, long value) = 0;
 };
 
-class RuleImpl
+class RuleImpl : public Rule
 {
 private:
-    // TODO
+    int ID;
+    int target_syscall;
+    std::string name;
+    RuleLevel level;
 public:
-    RuleImpl();
+    RuleImpl(int ID, int target_syscall, const std::string & name, RuleLevel level);
     virtual ~RuleImpl() {};
-    virtual RuleCheckMsg check();
-    virtual RuleInfo info();
-    virtual int matchRe(bool iscalling, ParameterIndex idx, const std::string & re); // usually should be a pointer
-    virtual int matchBytes(bool iscalling, ParameterIndex idx, const std::vector<char> & vc); // usually should be a pointer
-    virtual int equal(ParameterIndex idx, long value);
-    virtual int greater(ParameterIndex idx, long value);
-    virtual int notGreater(ParameterIndex idx, long value);
+    virtual RuleCheckMsg check(const core::SyscallParameter & sp) override;
+    virtual RuleInfo info() override;
+    virtual int matchRe(core::ParameterIndex idx, const std::string & re) override; // usually should be a pointer
+    virtual int matchBytes(core::ParameterIndex idx, const std::vector<char> & vc) override; // usually should be a pointer
+    virtual int equal(core::ParameterIndex idx, long value) override;
+    virtual int notEqual(core::ParameterIndex idx, long value) override;
+    virtual int greater(core::ParameterIndex idx, long value) override;
+    virtual int notGreater(core::ParameterIndex idx, long value) override;
 };
 
 }}

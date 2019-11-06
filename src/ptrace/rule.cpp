@@ -2,41 +2,50 @@
 
 namespace SAIL { namespace rule {
 
-RuleImpl::RuleImpl() {
+RuleImpl::RuleImpl(int ID, int target_syscall, const std::string & name, RuleLevel level) 
+    : ID(ID), target_syscall(target_syscall), name(name), level(level) 
+{
 
 };
 
-RuleCheckMsg RuleImpl::check() {
+RuleCheckMsg RuleImpl::check(const core::SyscallParameter & sp) {
 
 };
 
 RuleInfo RuleImpl::info() {
-    
+    return RuleInfo{
+
+    };
 };
 
-int RuleImpl::matchRe(bool iscalling, ParameterIndex idx, const std::string & re)
+int RuleImpl::matchRe(core::ParameterIndex idx, const std::string & re)
 {
 
-}
+};
 
-int RuleImpl::matchBytes(bool iscalling, ParameterIndex idx, const std::vector<char> & vc)
+int RuleImpl::matchBytes(core::ParameterIndex idx, const std::vector<char> & vc)
 {
 
-}
+};
 
-int RuleImpl::equal(ParameterIndex idx, long value)
+int RuleImpl::equal(core::ParameterIndex idx, long value)
 {
 
-}
+};
 
-int RuleImpl::greater(ParameterIndex idx, long value)
+int RuleImpl::notEqual(core::ParameterIndex idx, long value)
 {
 
-}
+};
 
-int RuleImpl::notGreater(ParameterIndex idx, long value)
+int RuleImpl::greater(core::ParameterIndex idx, long value)
 {
 
-}
+};
+
+int RuleImpl::notGreater(core::ParameterIndex idx, long value)
+{
+
+};
 
 }}
