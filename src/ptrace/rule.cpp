@@ -9,13 +9,11 @@ RuleImpl::RuleImpl(int ID, int target_syscall, const std::string & name, RuleLev
 };
 
 RuleCheckMsg RuleImpl::check(const core::SyscallParameter & sp) {
-
+    return RuleCheckMsg();
 };
 
 RuleInfo RuleImpl::info() {
-    return RuleInfo{
-
-    };
+    return RuleInfo();
 };
 
 int RuleImpl::matchRe(core::ParameterIndex idx, const std::string & re)
