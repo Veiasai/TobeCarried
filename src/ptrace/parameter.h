@@ -25,11 +25,11 @@ struct Parameter
 {
     ParameterType type;
     long size;
-    union value
+    union 
     {
         void * p;
         long value;
-    };
+    } value;
 };
 
 struct SyscallParameter
