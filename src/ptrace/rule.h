@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <functional>
 
 #include "parameter.h"
 
@@ -16,7 +17,7 @@ struct RuleCheckMsg
 
 enum RuleLevel
 {
-    record,
+    record = 1,
     standard,
     dangerous,
 };
@@ -50,6 +51,7 @@ private:
     int target_syscall;
     std::string name;
     RuleLevel level;
+    std::vector<std::function<core::SyscallParameter>> rulevalues;
 public:
     RuleImpl(int ID, int target_syscall, const std::string & name, RuleLevel level);
     virtual ~RuleImpl() {};

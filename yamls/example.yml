@@ -1,0 +1,11 @@
+- sysnum: 11
+  id: 1
+  name: hello
+  level: 2
+  specs:
+    - paraIndex: 1
+      action: matchRe
+      value: hello_value
+    - paraIndex: 2
+      action: matchRe
+      value: hello_value2

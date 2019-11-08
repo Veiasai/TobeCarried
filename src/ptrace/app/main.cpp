@@ -11,6 +11,7 @@
 #include "../tracer.h"
 #include "../tracee.h"
 #include "../utils.h"
+#include "../ruleManager.h"
 
 using namespace std;
 using namespace SAIL;
@@ -33,19 +34,21 @@ void startChild(const char * target) {
 }
 
 int main(int argc,char **argv){
-    if (argc != 3) {
+    if (argc != 2) {
         cout << "please input the target file name and log level\n";
         return -1;
     }
 
     startChild(argv[1]);
     initLogger(argv[2]);
+    YAML::Node config=YAML::LoadFile("yamls/try.yml");
+    std::shared_ptr<SAIL::rule::YamlRuleManger> ymlmgr=std::make_shared<SAIL::rule::YamlRuleManger>(config);
     
-    std::shared_ptr<utils::CustomPtrace> cp = std::make_shared<utils::CustomPtraceImpl>();
-    std::shared_ptr<utils::Utils> up = std::make_shared<utils::UtilsImpl>(cp);
+    // std::shared_ptr<utils::CustomPtrace> cp = std::make_shared<utils::CustomPtraceImpl>();
+    // std::shared_ptr<utils::Utils> up = std::make_shared<utils::UtilsImpl>(cp);
 
-    auto tracer = std::make_unique<core::Tracer>(up, cp);
-    tracer->run();
+    // auto tracer = std::make_unique<core::Tracer>(up, cp);
+    // tracer->run();
 
     return 0;
 }
