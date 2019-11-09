@@ -51,7 +51,7 @@ private:
     int target_syscall;
     std::string name;
     RuleLevel level;
-    std::vector<std::function<core::SyscallParameter>> rulevalues;
+    std::vector<std::function<int(const core::SyscallParameter & sp)>> rulevalues;
 public:
     RuleImpl(int ID, int target_syscall, const std::string & name, RuleLevel level);
     virtual ~RuleImpl() {};

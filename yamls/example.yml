@@ -7,5 +7,5 @@
       action: matchRe
       value: hello_value
     - paraIndex: 2
-      action: matchRe
-      value: hello_value2
+      action: matchBytes
+      value: [0x6d, 0x77]

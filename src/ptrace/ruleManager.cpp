@@ -14,7 +14,7 @@ YamlRuleManger::YamlRuleManger(const YAML::Node &yaml)
     {
         int num = (*ruleNode)["sysnum"].as<int>();
         int id = (*ruleNode)["id"].as<int>();
-        int level = (*ruleNode)["level"].as<int>();
+        SAIL::rule::RuleLevel level = (SAIL::rule::RuleLevel)((*ruleNode)["level"].as<int>());
         std::string name = (*ruleNode)["name"].as<std::string>();
         const YAML::Node specs = (*ruleNode)["specs"];
         // TODO: config level
@@ -32,6 +32,12 @@ YamlRuleManger::YamlRuleManger(const YAML::Node &yaml)
             {
                 // how to input bytes?
                 // rule->matchBytes(idx, )
+                std::vector<int> nums = (*spec)["value"].as<std::vector<int>>();
+                std::vector<char> bytes;
+                for (auto e : nums)
+                    bytes.push_back((char)(e));
+
+                rule->matchBytes(idx, bytes);
             }
             else if (action == "equal")
             {
@@ -52,7 +58,7 @@ YamlRuleManger::YamlRuleManger(const YAML::Node &yaml)
             // TODO: more actions
         }
         //  add the rule to the map
-        rules[num].emplace_back(rule);
+        rules[num].emplace_back(std::move(rule));
     }
 };
 
