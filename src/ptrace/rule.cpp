@@ -42,7 +42,7 @@ int RuleImpl::matchRe(core::ParameterIndex idx, const std::string &re)
     return 0;
 };
 
-int RuleImpl::matchBytes(core::ParameterIndex idx, const std::vector<char> &vc)
+int RuleImpl::matchBytes(core::ParameterIndex idx, const std::vector<unsigned char> &vc)
 {
     rulevalues.emplace_back([idx, vc](const core::SyscallParameter &sp) -> int {
         char *str = (char *)sp.parameters[idx - 1].value.p;

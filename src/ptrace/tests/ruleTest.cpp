@@ -36,7 +36,7 @@ TEST_F(RuleFixture, match_bytes_in_open_filename)
     int ID = 1;
     const std::string name = "equal";
     RuleImpl rule(ID, SYS_open, name, RuleLevel::record);
-    std::vector<char> bytes;
+    std::vector<unsigned char> bytes;
     std::string fileName = "/proc";
     char fileNameBuf[20] = "/proc";
     bytes.insert(bytes.end(), fileName.begin(), fileName.end());

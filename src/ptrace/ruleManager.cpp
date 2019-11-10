@@ -12,13 +12,13 @@ YamlRuleManger::YamlRuleManger(const YAML::Node &yaml)
 {
     for (auto ruleNode = yaml.begin(); ruleNode != yaml.end(); ruleNode++)
     {
-        int num = (*ruleNode)["sysnum"].as<int>();
+        int sysnum = (*ruleNode)["sysnum"].as<int>();
         int id = (*ruleNode)["id"].as<int>();
         SAIL::rule::RuleLevel level = (SAIL::rule::RuleLevel)((*ruleNode)["level"].as<int>());
         std::string name = (*ruleNode)["name"].as<std::string>();
         const YAML::Node specs = (*ruleNode)["specs"];
         // TODO: config level
-        std::unique_ptr<Rule> rule = std::make_unique<RuleImpl>(id, num, name, level);
+        std::unique_ptr<Rule> rule = std::make_unique<RuleImpl>(id, sysnum, name, level);
         for (auto spec = specs.begin(); spec != specs.end(); spec++)
         {
             std::string action = (*spec)["action"].as<std::string>();
@@ -32,10 +32,10 @@ YamlRuleManger::YamlRuleManger(const YAML::Node &yaml)
             {
                 // how to input bytes?
                 // rule->matchBytes(idx, )
-                std::vector<int> nums = (*spec)["value"].as<std::vector<int>>();
-                std::vector<char> bytes;
-                for (auto e : nums)
-                    bytes.push_back((char)(e));
+                std::vector<int> values = (*spec)["value"].as<std::vector<int>>();
+                std::vector<unsigned char> bytes;
+                for (auto e : values)
+                    bytes.push_back((unsigned char)(e));
 
                 rule->matchBytes(idx, bytes);
             }
@@ -57,8 +57,8 @@ YamlRuleManger::YamlRuleManger(const YAML::Node &yaml)
             }
             // TODO: more actions
         }
-        //  add the rule to the map
-        rules[num].emplace_back(std::move(rule));
+        // add the rule to the map
+        rules[sysnum].emplace_back(std::move(rule));
     }
 };
 
@@ -69,6 +69,7 @@ std::vector<RuleCheckMsg> YamlRuleManger::check(int syscall, const core::Syscall
     {
         res.push_back(rule->check(sp));
     }
+    return res;
 };
 
 } // namespace rule
