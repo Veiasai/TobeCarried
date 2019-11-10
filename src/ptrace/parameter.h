@@ -6,7 +6,7 @@ namespace SAIL { namespace core {
 
 enum ParameterIndex
 {
-    First,
+    First = 1,
     Second,
     Third,
     Fourth,

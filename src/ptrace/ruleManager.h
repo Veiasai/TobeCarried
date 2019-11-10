@@ -20,6 +20,7 @@ public:
 class YamlRuleManger : public RuleManager
 {
 private:
+    // map from syscall number to rules applied
     std::map<int, std::vector<std::unique_ptr<Rule>>> rules;
 public:
     YamlRuleManger(const YAML::Node & yaml);
