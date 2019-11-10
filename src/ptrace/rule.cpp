@@ -11,13 +11,13 @@ RuleImpl::RuleImpl(int ID, int target_syscall, const std::string &name, RuleLeve
 
 RuleCheckMsg RuleImpl::check(const core::SyscallParameter &sp)
 {
-    RuleCheckMsg rcm = {false, ID, ""};
+    RuleCheckMsg rcm = {true, ID, ""};
 
-    for (auto f : rulevalues)
+    for (auto &f : rulevalues)
     {
         if (f(sp))
         {
-            rcm.approval = true;
+            rcm.approval = false;
             rcm.msg = "matched";
             return rcm;
         }

@@ -41,9 +41,10 @@ int main(int argc,char **argv){
 
     startChild(argv[1]);
     initLogger(argv[2]);
-    // I comment it for passing the coding examination
+
     YAML::Node config=YAML::LoadFile(argv[3]);
-    std::shared_ptr<SAIL::rule::YamlRuleManger> ymlmgr=std::make_shared<SAIL::rule::YamlRuleManger>(config);
+    std::shared_ptr<SAIL::rule::RuleManager> ymlmgr=std::make_shared<SAIL::rule::YamlRuleManager>(config);
+    (void) ymlmgr;
 
     std::shared_ptr<utils::CustomPtrace> cp = std::make_shared<utils::CustomPtraceImpl>();
     std::shared_ptr<utils::Utils> up = std::make_shared<utils::UtilsImpl>(cp);
