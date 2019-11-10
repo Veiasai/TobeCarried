@@ -1,6 +1,5 @@
 #include "ruleManager.h"
 
-#include <yaml-cpp/yaml.h>
 #include <iostream>
 
 namespace SAIL
@@ -8,7 +7,7 @@ namespace SAIL
 namespace rule
 {
 
-YamlRuleManger::YamlRuleManger(const YAML::Node &yaml)
+YamlRuleManager::YamlRuleManager(const YAML::Node &yaml)
 {
     for (auto ruleNode = yaml.begin(); ruleNode != yaml.end(); ruleNode++)
     {
@@ -62,7 +61,7 @@ YamlRuleManger::YamlRuleManger(const YAML::Node &yaml)
     }
 };
 
-std::vector<RuleCheckMsg> YamlRuleManger::check(int syscall, const core::SyscallParameter &sp)
+std::vector<RuleCheckMsg> YamlRuleManager::check(int syscall, const core::SyscallParameter &sp)
 {
     std::vector<RuleCheckMsg> res;
     for (auto &rule : rules[syscall])
