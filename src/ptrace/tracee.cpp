@@ -1,13 +1,15 @@
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/basic_file_sink.h"
+#include "tracee.h"
+#include "utils.h"
+
+namespace {
 #include <sys/ptrace.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
 #include <sys/reg.h>
 #include <sys/user.h>
-
-#include "spdlog/spdlog.h"
-#include "spdlog/sinks/basic_file_sink.h"
-#include "tracee.h"
-#include "utils.h"
+}  // macro SS is defined in <sys/reg.h> but at the same time is used by yaml-cpp
 
 namespace SAIL { namespace core {
 
