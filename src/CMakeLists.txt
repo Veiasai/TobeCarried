@@ -11,6 +11,7 @@ add_subdirectory(ptrace)
 add_subdirectory(benchmark)
 add_subdirectory(spdlog)
 add_subdirectory(yaml-cpp)
+add_subdirectory(cxxopts)
 
 # GTest
 add_subdirectory(googletest)

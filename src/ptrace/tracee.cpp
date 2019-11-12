@@ -68,8 +68,9 @@ void TraceeImpl::open()
 {
     if (this->iscalling) {
         const char *filename = (char *)this->history.back().call_regs.rdi;
+        assert(filename);
         int r = up->readStrFrom(this->tid, filename, tmpFilename, MAX_FILENAME_SIZE);
-
+    
         spdlog::debug("[tid: {}] Open: filename: {}", tid, tmpFilename);
     } else {
         const unsigned long long int fd = this->history.back().ret_regs.rax;
@@ -81,7 +82,7 @@ void TraceeImpl::read()
     if (this->iscalling) {
         const int fd = (int)this->history.back().call_regs.rdi;
         const char *filename = fdToFilename[fd];
-
+        assert(filename);
         spdlog::debug("[tid: {}] Read: filename: {}", tid, filename);
     }
 }
@@ -90,7 +91,7 @@ void TraceeImpl::write()
     if (this->iscalling) {
         const int fd = (int)this->history.back().call_regs.rdi;
         const char *filename = fdToFilename[fd];
-
+        assert(filename);
         spdlog::debug("[tid: {}] Write: filename: {}", tid, filename);
     }
 }

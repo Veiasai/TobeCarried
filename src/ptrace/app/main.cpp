@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <cxxopts.hpp>
 
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/basic_file_sink.h"
@@ -13,7 +14,6 @@
 #include "../utils.h"
 #include "../ruleManager.h"
 
-using namespace std;
 using namespace SAIL;
 
 void initLogger(const char * logLevel) {
@@ -34,23 +34,32 @@ void startChild(const char * target) {
 }
 
 int main(int argc,char **argv){
-    if (argc != 4) {
-        cout << "please input the target file name and log level and configuration file name\n";
-        return -1;
+    cxxopts::Options options("ToBeCarried", "Trace the systemcall used by a process.");
+    options.add_options()
+    ("l,loglevel", "Log Level: Info, Debug", cxxopts::value<std::string>())
+    ("f,file", "the file you want to check", cxxopts::value<std::string>())
+    ("c,config", "config file path", cxxopts::value<std::string>())
+    ;
+    try {
+        auto result = options.parse(argc, argv);
+
+        initLogger(result["l"].as<std::string>().c_str());
+        startChild(result["f"].as<std::string>().c_str());
+
+        YAML::Node config = YAML::LoadFile(result["c"].as<std::string>());
+
+        std::shared_ptr<SAIL::rule::RuleManager> ymlmgr=std::make_shared<SAIL::rule::YamlRuleManager>(config);
+        (void) ymlmgr;
+
+        std::shared_ptr<utils::CustomPtrace> cp = std::make_shared<utils::CustomPtraceImpl>();
+        std::shared_ptr<utils::Utils> up = std::make_shared<utils::UtilsImpl>(cp);
+
+        auto tracer = std::make_unique<core::Tracer>(up, cp);
+        tracer->run();
+    } catch (std::exception & e){
+        std::cout << e.what() << std::endl;
+        return 0;
     }
-
-    startChild(argv[1]);
-    initLogger(argv[2]);
-
-    YAML::Node config=YAML::LoadFile(argv[3]);
-    std::shared_ptr<SAIL::rule::RuleManager> ymlmgr=std::make_shared<SAIL::rule::YamlRuleManager>(config);
-    (void) ymlmgr;
-
-    std::shared_ptr<utils::CustomPtrace> cp = std::make_shared<utils::CustomPtraceImpl>();
-    std::shared_ptr<utils::Utils> up = std::make_shared<utils::UtilsImpl>(cp);
-
-    auto tracer = std::make_unique<core::Tracer>(up, cp);
-    tracer->run();
 
     return 0;
 }
