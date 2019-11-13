@@ -8,7 +8,8 @@
 #include "utils.h"
 #include "ruleManager.h"
 
-#define MAX_FILENAME_SIZE 256
+const int MAX_FILENAME_SIZE = 256;
+const int MAX_READ_SIZE = 1 << 16;  // cannot be to much, otherwise segmentation fault will rise when defining localBuf
 
 namespace SAIL { namespace core {
 

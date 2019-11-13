@@ -67,6 +67,9 @@ void TraceeImpl::trap()
 void TraceeImpl::open()
 {
     if (this->iscalling) {
+        // filename is address in target program memory space
+        // need to grab it to tracee memory space
+        // when encountering pointer, caution needed
         const char *filename = (char *)this->history.back().call_regs.rdi;
         int r = up->readStrFrom(this->tid, filename, tmpFilename, MAX_FILENAME_SIZE);
 
@@ -83,6 +86,17 @@ void TraceeImpl::read()
         const char *filename = fdToFilename[fd];
 
         spdlog::debug("[tid: {}] Read: filename: {}", tid, filename);
+        spdlog::debug("[tid: {}] Read: fd: {}", tid, fd);
+    }
+    else {
+        const ssize_t size = this->history.back().ret_regs.rax;
+        const int fd = (int)this->history.back().call_regs.rdi;
+        const char *filename = fdToFilename[fd];
+        const char *buf = (char *)this->history.back().call_regs.rsi;
+        char localBuf[MAX_READ_SIZE];
+        int r = this->up->readBytesFrom(this->tid, buf, localBuf, size);
+
+        spdlog::debug("[tid: {}] Read: filename: {} content: {}", tid, filename, localBuf);
     }
 }
 void TraceeImpl::write()
@@ -91,7 +105,8 @@ void TraceeImpl::write()
         const int fd = (int)this->history.back().call_regs.rdi;
         const char *filename = fdToFilename[fd];
 
-        spdlog::debug("[tid: {}] Write: filename: {}", tid, filename);
+        // spdlog::debug("[tid: {}] Write: filename: {}", tid, filename);
+        spdlog::debug("[tid: {}] Write: fd: {}", tid, fd);
     }
 }
 
