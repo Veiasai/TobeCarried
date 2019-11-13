@@ -13,10 +13,14 @@ namespace {
 
 namespace SAIL { namespace core {
 
-TraceeImpl::TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp) : tid(tid), up(up), cp(cp)
+TraceeImpl::TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, std::shared_ptr<rule::RuleManager> rulemgr) : tid(tid), up(up), cp(cp), rulemgr(rulemgr)
 {
     this->iscalling = true;
-    this->lastSyscallID = -1;  // -1 means the first syscall
+    this->lastSyscallID = -1; // -1 means the first syscall
+    this->fdToFilename[0] = (char *)"standard-input";
+    this->fdToFilename[1] = (char *)"standard-output";
+    this->fdToFilename[2] = (char *)"standard-error";
+    memset(tmpFilename, 0, MAX_FILENAME_SIZE);
 }
 
 void TraceeImpl::trap()
@@ -61,20 +65,36 @@ void TraceeImpl::trap()
             break;
     }
 
+    // check
+    if (!this->iscalling) {
+        const std::vector<RuleCheckMsg> cnt = this->rulemgr->check(orig_rax, this->syscallParams);
+        this->ruleCheckMsg.push_back(cnt);
+    }
 }
 
 // file
 void TraceeImpl::open()
 {
+    // fd 0, 1, 2 never be opened, handle specially in constructor
     if (this->iscalling) {
+        // filename is address in target program memory space
+        // need to grab it to tracee memory space
+        // when encountering pointer, caution needed
         const char *filename = (char *)this->history.back().call_regs.rdi;
         assert(filename);
-        int r = up->readStrFrom(this->tid, filename, tmpFilename, MAX_FILENAME_SIZE);
-    
+        memset(tmpFilename, 0, MAX_FILENAME_SIZE);
+        this->up->readStrFrom(this->tid, filename, tmpFilename, MAX_FILENAME_SIZE);
+
         spdlog::debug("[tid: {}] Open: filename: {}", tid, tmpFilename);
     } else {
         const unsigned long long int fd = this->history.back().ret_regs.rax;
         fdToFilename[fd] = tmpFilename;
+        spdlog::debug("[tid: {}] Open: fd: {}", tid, fd);
+
+        this->syscallParams.parameters.push_back(Parameter(nonpointer, 0, NULL, fd));
+        this->syscallParams.parameters.push_back(Parameter(pointer, MAX_FILENAME_SIZE, tmpFilename, 0));
+        const int flags = (int)this->history.back().call_regs.rsi;
+        this->syscallParams.parameters.push_back(Parameter(nonpointer, 0, NULL, flags));
     }
 }
 void TraceeImpl::read()
@@ -84,6 +104,17 @@ void TraceeImpl::read()
         const char *filename = fdToFilename[fd];
         assert(filename);
         spdlog::debug("[tid: {}] Read: filename: {}", tid, filename);
+        spdlog::debug("[tid: {}] Read: fd: {}", tid, fd);
+    }
+    else {
+        const ssize_t size = this->history.back().ret_regs.rax;
+        const int fd = (int)this->history.back().call_regs.rdi;
+        const char *filename = fdToFilename[fd];
+        const char *buf = (char *)this->history.back().call_regs.rsi;
+        char localBuf[MAX_READ_SIZE];
+        this->up->readBytesFrom(this->tid, buf, localBuf, size);
+
+        spdlog::debug("[tid: {}] Read: filename: {} content: {}", tid, filename, localBuf);
     }
 }
 void TraceeImpl::write()
@@ -93,6 +124,17 @@ void TraceeImpl::write()
         const char *filename = fdToFilename[fd];
         assert(filename);
         spdlog::debug("[tid: {}] Write: filename: {}", tid, filename);
+        spdlog::debug("[tid: {}] Write: fd: {}", tid, fd);
+    }
+    else {
+        const ssize_t size = this->history.back().ret_regs.rax;
+        const int fd = (int)this->history.back().call_regs.rdi;
+        const char *filename = fdToFilename[fd];
+        const char *buf = (char *)this->history.back().call_regs.rsi;
+        char localBuf[MAX_READ_SIZE];
+        this->up->readBytesFrom(this->tid, buf, localBuf, size);
+
+        spdlog::debug("[tid: {}] Read: filename: {} content: {}", tid, filename, localBuf);
     }
 }
 
@@ -130,9 +172,9 @@ const std::vector<Systemcall> & TraceeImpl::getHistory()
     return this->history;
 }
 
-const std::vector<WarnInfo> & TraceeImpl::getReport()
+const std::vector<std::vector<RuleCheckMsg>> & TraceeImpl::getRuleCheckMsg()
 {
-    return this->report;
+    return this->ruleCheckMsg;
 }
 
 }}

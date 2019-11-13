@@ -22,7 +22,7 @@ void initLogger(const char * logLevel) {
     spdlog::set_default_logger(spdlog::basic_logger_mt("default_logger", "logs/basic.txt"));
 }
 
-void startChild(const char * target) {
+void startChild(const char * target, const std::vector<std::string> & args) {
     __pid_t child = fork();
     if (child == 0) {
         int childLogFd = open("/dev/null", O_WRONLY);
@@ -39,27 +39,28 @@ int main(int argc,char **argv){
     ("l,loglevel", "Log Level: Info, Debug", cxxopts::value<std::string>())
     ("f,file", "the file you want to check", cxxopts::value<std::string>())
     ("c,config", "config file path", cxxopts::value<std::string>())
+    ("a,args", "pass args to child", cxxopts::value<std::vector<std::string>>())
     ;
     try {
         auto result = options.parse(argc, argv);
 
         initLogger(result["l"].as<std::string>().c_str());
-        startChild(result["f"].as<std::string>().c_str());
+        startChild(result["f"].as<std::string>().c_str(), result["a"].as<std::vector<std::string>>());
 
         YAML::Node config = YAML::LoadFile(result["c"].as<std::string>());
 
         std::shared_ptr<SAIL::rule::RuleManager> ymlmgr=std::make_shared<SAIL::rule::YamlRuleManager>(config);
-        (void) ymlmgr;
 
         std::shared_ptr<utils::CustomPtrace> cp = std::make_shared<utils::CustomPtraceImpl>();
         std::shared_ptr<utils::Utils> up = std::make_shared<utils::UtilsImpl>(cp);
 
-        auto tracer = std::make_unique<core::Tracer>(up, cp);
+        auto tracer = std::make_unique<core::Tracer>(up, cp, ymlmgr);
         tracer->run();
     } catch (std::exception & e){
         std::cout << e.what() << std::endl;
         return 0;
     }
+
 
     return 0;
 }
