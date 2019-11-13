@@ -17,6 +17,9 @@ TraceeImpl::TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_pt
 {
     this->iscalling = true;
     this->lastSyscallID = -1;  // -1 means the first syscall
+    this->fdToFilename[0] = (char *)"standard-input";
+    this->fdToFilename[1] = (char *)"standard-output";
+    this->fdToFilename[2] = (char *)"standard-error";
 }
 
 void TraceeImpl::trap()
@@ -66,6 +69,7 @@ void TraceeImpl::trap()
 // file
 void TraceeImpl::open()
 {
+    // fd 0, 1, 2 never be opened, handle specially in constructor
     if (this->iscalling) {
         // filename is address in target program memory space
         // need to grab it to tracee memory space
@@ -77,6 +81,7 @@ void TraceeImpl::open()
     } else {
         const unsigned long long int fd = this->history.back().ret_regs.rax;
         fdToFilename[fd] = tmpFilename;
+        spdlog::debug("[tid: {}] Open: fd: {}", tid, fd);
     }
 }
 void TraceeImpl::read()
@@ -105,7 +110,7 @@ void TraceeImpl::write()
         const int fd = (int)this->history.back().call_regs.rdi;
         const char *filename = fdToFilename[fd];
 
-        // spdlog::debug("[tid: {}] Write: filename: {}", tid, filename);
+        spdlog::debug("[tid: {}] Write: filename: {}", tid, filename);
         spdlog::debug("[tid: {}] Write: fd: {}", tid, fd);
     }
 }
