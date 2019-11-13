@@ -16,10 +16,11 @@ namespace SAIL { namespace core {
 TraceeImpl::TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, std::shared_ptr<rule::RuleManager> rulemgr) : tid(tid), up(up), cp(cp), rulemgr(rulemgr)
 {
     this->iscalling = true;
-    this->lastSyscallID = -1;  // -1 means the first syscall
+    this->lastSyscallID = -1; // -1 means the first syscall
     this->fdToFilename[0] = (char *)"standard-input";
     this->fdToFilename[1] = (char *)"standard-output";
     this->fdToFilename[2] = (char *)"standard-error";
+    memset(tmpFilename, 0, MAX_FILENAME_SIZE);
 }
 
 void TraceeImpl::trap()
@@ -75,7 +76,8 @@ void TraceeImpl::open()
         // need to grab it to tracee memory space
         // when encountering pointer, caution needed
         const char *filename = (char *)this->history.back().call_regs.rdi;
-        int r = up->readStrFrom(this->tid, filename, tmpFilename, MAX_FILENAME_SIZE);
+        memset(tmpFilename, 0, MAX_FILENAME_SIZE);
+        this->up->readStrFrom(this->tid, filename, tmpFilename, MAX_FILENAME_SIZE);
 
         spdlog::debug("[tid: {}] Open: filename: {}", tid, tmpFilename);
     } else {
@@ -99,7 +101,7 @@ void TraceeImpl::read()
         const char *filename = fdToFilename[fd];
         const char *buf = (char *)this->history.back().call_regs.rsi;
         char localBuf[MAX_READ_SIZE];
-        int r = this->up->readBytesFrom(this->tid, buf, localBuf, size);
+        this->up->readBytesFrom(this->tid, buf, localBuf, size);
 
         spdlog::debug("[tid: {}] Read: filename: {} content: {}", tid, filename, localBuf);
     }
@@ -119,7 +121,7 @@ void TraceeImpl::write()
         const char *filename = fdToFilename[fd];
         const char *buf = (char *)this->history.back().call_regs.rsi;
         char localBuf[MAX_READ_SIZE];
-        int r = this->up->readBytesFrom(this->tid, buf, localBuf, size);
+        this->up->readBytesFrom(this->tid, buf, localBuf, size);
 
         spdlog::debug("[tid: {}] Read: filename: {} content: {}", tid, filename, localBuf);
     }
