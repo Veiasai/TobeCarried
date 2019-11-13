@@ -9,9 +9,9 @@ namespace rule
 RuleImpl::RuleImpl(int ID, int target_syscall, const std::string &name, RuleLevel level)
     : ID(ID), target_syscall(target_syscall), name(name), level(level){};
 
-RuleCheckMsg RuleImpl::check(const core::SyscallParameter &sp)
+core::RuleCheckMsg RuleImpl::check(const core::SyscallParameter &sp)
 {
-    RuleCheckMsg rcm = {true, ID, ""};
+    core::RuleCheckMsg rcm = {true, ID, ""};
 
     for (auto &f : rulevalues)
     {

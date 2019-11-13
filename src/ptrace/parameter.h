@@ -37,6 +37,13 @@ struct SyscallParameter
     std::vector<Parameter> parameters;
 };
 
+struct RuleCheckMsg
+{
+    bool approval;
+    int ruleID;
+    std::string msg;
+};
+
 
 }}
 
