@@ -6,13 +6,14 @@ namespace SAIL { namespace core {
 
 enum ParameterIndex
 {
-    First = 1,
+    Ret,
+    First,
     Second,
     Third,
     Fourth,
     Fifth,
     Sixth,
-    Ret,
+    
 };
 
 enum ParameterType
@@ -24,12 +25,24 @@ enum ParameterType
 struct Parameter
 {
     ParameterType type;
-    long size;
+    long size;  // size of object pointed
     union 
     {
         void * p;
         long value;
     } value;
+
+    Parameter(ParameterType ftype, long fsize, void *fp, long fvalue) {
+        if (ftype == pointer) {
+            type = pointer;
+            size = fsize;
+            value.p = fp;
+        }
+        else {
+            type = nonpointer;
+            value.value = fvalue;
+        }
+    }
 };
 
 struct SyscallParameter

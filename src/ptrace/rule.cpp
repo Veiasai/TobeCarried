@@ -37,7 +37,7 @@ int RuleImpl::matchRe(core::ParameterIndex idx, const std::string &re)
 
     rulevalues.emplace_back([idx, pattern](const core::SyscallParameter &sp) -> int {
         std::regex pattern;
-        return std::regex_match((char *)(sp.parameters[idx - 1].value.p), pattern) ? 1 : 0;
+        return std::regex_match((char *)(sp.parameters[idx].value.p), pattern) ? 1 : 0;
     });
     return 0;
 };
@@ -45,8 +45,8 @@ int RuleImpl::matchRe(core::ParameterIndex idx, const std::string &re)
 int RuleImpl::matchBytes(core::ParameterIndex idx, const std::vector<unsigned char> &vc)
 {
     rulevalues.emplace_back([idx, vc](const core::SyscallParameter &sp) -> int {
-        char *str = (char *)sp.parameters[idx - 1].value.p;
-        long spsize = sp.parameters[idx - 1].size;
+        char *str = (char *)sp.parameters[idx].value.p;
+        long spsize = sp.parameters[idx].size;
         int matched = 0;
 
         if (vc.size() > spsize)
@@ -77,7 +77,7 @@ int RuleImpl::matchBytes(core::ParameterIndex idx, const std::vector<unsigned ch
 int RuleImpl::equal(core::ParameterIndex idx, long value)
 {
     rulevalues.emplace_back([idx, value](const core::SyscallParameter &sp) -> int {
-        return (sp.parameters[idx - 1].value.value == value) ? 1 : 0;
+        return (sp.parameters[idx].value.value == value) ? 1 : 0;
     });
     return 0;
 };
@@ -85,7 +85,7 @@ int RuleImpl::equal(core::ParameterIndex idx, long value)
 int RuleImpl::notEqual(core::ParameterIndex idx, long value)
 {
     rulevalues.emplace_back([idx, value](const core::SyscallParameter &sp) -> int {
-        return (sp.parameters[idx - 1].value.value != value) ? 1 : 0;
+        return (sp.parameters[idx].value.value != value) ? 1 : 0;
     });
     return 0;
 };
@@ -93,7 +93,7 @@ int RuleImpl::notEqual(core::ParameterIndex idx, long value)
 int RuleImpl::greater(core::ParameterIndex idx, long value)
 {
     rulevalues.emplace_back([idx, value](const core::SyscallParameter &sp) -> int {
-        return (sp.parameters[idx - 1].value.value > value) ? 1 : 0;
+        return (sp.parameters[idx].value.value > value) ? 1 : 0;
     });
     return 0;
 };
@@ -101,7 +101,7 @@ int RuleImpl::greater(core::ParameterIndex idx, long value)
 int RuleImpl::notGreater(core::ParameterIndex idx, long value)
 {
     rulevalues.emplace_back([idx, value](const core::SyscallParameter &sp) -> int {
-        return (sp.parameters[idx - 1].value.value <= value) ? 1 : 0;
+        return (sp.parameters[idx].value.value <= value) ? 1 : 0;
     });
     return 0;
 };

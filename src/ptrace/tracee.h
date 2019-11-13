@@ -6,10 +6,12 @@
 #include <map>
 
 #include "utils.h"
-
-#define MAX_FILENAME_SIZE 256
+#include "ruleManager.h"
 
 namespace SAIL { namespace core {
+    
+const int MAX_FILENAME_SIZE = 256;
+const int MAX_READ_SIZE = 1 << 16;  // cannot be too much, otherwise segmentation fault will rise when defining localBuf
 
 struct Systemcall {
     struct user_regs_struct call_regs;
@@ -32,7 +34,7 @@ public:
     virtual ~Tracee() {};
     virtual void trap() = 0;
     virtual const std::vector<Systemcall> & getHistory() = 0;
-    virtual const std::vector<WarnInfo> & getReport() = 0;
+    virtual const std::vector<std::vector<RuleCheckMsg>> & getRuleCheckMsg() = 0;
 };
 
 class TraceeImpl : public Tracee
@@ -41,15 +43,18 @@ private:
     int tid;
     volatile bool iscalling;
     std::vector<Systemcall> history;
-    std::vector<WarnInfo> report;
+    std::vector<std::vector<RuleCheckMsg>> ruleCheckMsg;
     std::shared_ptr<utils::Utils> up;
     std::shared_ptr<utils::CustomPtrace> cp;
+    std::shared_ptr<rule::RuleManager> rulemgr;
+
     std::map<int, char *> fdToFilename;
 
     // for buffering filename to insert into fdToFilename
     char tmpFilename[MAX_FILENAME_SIZE];
     // for buffering syscall id to check whether syscall returns
     long lastSyscallID;
+    SyscallParameter syscallParams;
 
     // file
     void open();
@@ -64,11 +69,11 @@ private:
     // clone
     void clone();
 public:
-    TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp);
+    TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, std::shared_ptr<rule::RuleManager> rulemgr);
     virtual ~TraceeImpl() {};
     virtual void trap();
     virtual const std::vector<Systemcall> & getHistory();
-    virtual const std::vector<WarnInfo> & getReport();
+    virtual const std::vector<std::vector<RuleCheckMsg>> & getRuleCheckMsg();
 };
 
 }}
