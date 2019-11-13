@@ -113,6 +113,16 @@ void TraceeImpl::write()
         spdlog::debug("[tid: {}] Write: filename: {}", tid, filename);
         spdlog::debug("[tid: {}] Write: fd: {}", tid, fd);
     }
+    else {
+        const ssize_t size = this->history.back().ret_regs.rax;
+        const int fd = (int)this->history.back().call_regs.rdi;
+        const char *filename = fdToFilename[fd];
+        const char *buf = (char *)this->history.back().call_regs.rsi;
+        char localBuf[MAX_READ_SIZE];
+        int r = this->up->readBytesFrom(this->tid, buf, localBuf, size);
+
+        spdlog::debug("[tid: {}] Read: filename: {} content: {}", tid, filename, localBuf);
+    }
 }
 
 // net
