@@ -8,12 +8,6 @@
 
 namespace SAIL { namespace rule {
 
-struct RuleCheckMsg
-{
-    bool approval;
-    int ruleID;
-    std::string msg;
-};
 
 enum RuleLevel
 {
@@ -34,7 +28,7 @@ class Rule
 {
 public:
     virtual ~Rule() {};
-    virtual RuleCheckMsg check(const core::SyscallParameter & sp) = 0;
+    virtual core::RuleCheckMsg check(const core::SyscallParameter & sp) = 0;
     virtual RuleInfo info() = 0;
     virtual int matchRe(core::ParameterIndex idx, const std::string & re) = 0; // usually should be a pointer
     virtual int matchBytes(core::ParameterIndex idx, const std::vector<unsigned char> & vc) = 0; // usually should be a pointer
@@ -55,7 +49,7 @@ private:
 public:
     RuleImpl(int ID, int target_syscall, const std::string & name, RuleLevel level);
     virtual ~RuleImpl() {};
-    virtual RuleCheckMsg check(const core::SyscallParameter & sp) override;
+    virtual core::RuleCheckMsg check(const core::SyscallParameter & sp) override;
     virtual RuleInfo info() override;
     virtual int matchRe(core::ParameterIndex idx, const std::string & re) override; // usually should be a pointer
     virtual int matchBytes(core::ParameterIndex idx, const std::vector<unsigned char> & vc) override; // usually should be a pointer
