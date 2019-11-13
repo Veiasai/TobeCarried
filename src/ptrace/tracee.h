@@ -34,7 +34,7 @@ public:
     virtual ~Tracee() {};
     virtual void trap() = 0;
     virtual const std::vector<Systemcall> & getHistory() = 0;
-    virtual const std::vector<WarnInfo> & getReport() = 0;
+    virtual const std::vector<std::vector<RuleCheckMsg>> & getRuleCheckMsg() = 0;
 };
 
 class TraceeImpl : public Tracee
@@ -43,7 +43,7 @@ private:
     int tid;
     volatile bool iscalling;
     std::vector<Systemcall> history;
-    std::vector<WarnInfo> report;
+    std::vector<std::vector<RuleCheckMsg>> ruleCheckMsg;
     std::shared_ptr<utils::Utils> up;
     std::shared_ptr<utils::CustomPtrace> cp;
     std::shared_ptr<rule::RuleManager> rulemgr;
@@ -54,6 +54,7 @@ private:
     char tmpFilename[MAX_FILENAME_SIZE];
     // for buffering syscall id to check whether syscall returns
     long lastSyscallID;
+    SyscallParameter syscallParams;
 
     // file
     void open();
@@ -72,7 +73,7 @@ public:
     virtual ~TraceeImpl() {};
     virtual void trap();
     virtual const std::vector<Systemcall> & getHistory();
-    virtual const std::vector<WarnInfo> & getReport();
+    virtual const std::vector<std::vector<RuleCheckMsg>> & getRuleCheckMsg();
 };
 
 }}

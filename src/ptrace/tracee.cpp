@@ -65,6 +65,11 @@ void TraceeImpl::trap()
             break;
     }
 
+    // check
+    if (!this->iscalling) {
+        const std::vector<RuleCheckMsg> cnt = this->rulemgr->check(orig_rax, this->syscallParams);
+        this->ruleCheckMsg.push_back(cnt);
+    }
 }
 
 // file
@@ -84,6 +89,11 @@ void TraceeImpl::open()
         const unsigned long long int fd = this->history.back().ret_regs.rax;
         fdToFilename[fd] = tmpFilename;
         spdlog::debug("[tid: {}] Open: fd: {}", tid, fd);
+
+        this->syscallParams.parameters.push_back(Parameter(nonpointer, 0, NULL, fd));
+        this->syscallParams.parameters.push_back(Parameter(pointer, strlen(tmpFilename), tmpFilename, 0));
+        const int flags = (int)this->history.back().call_regs.rsi;
+        this->syscallParams.parameters.push_back(Parameter(nonpointer, 0, NULL, flags));
     }
 }
 void TraceeImpl::read()
@@ -161,9 +171,9 @@ const std::vector<Systemcall> & TraceeImpl::getHistory()
     return this->history;
 }
 
-const std::vector<WarnInfo> & TraceeImpl::getReport()
+const std::vector<std::vector<RuleCheckMsg>> & TraceeImpl::getRuleCheckMsg()
 {
-    return this->report;
+    return this->ruleCheckMsg;
 }
 
 }}
