@@ -33,7 +33,7 @@ void startChild(const char * target) {
     }
 }
 
-int main(int argc,char **argv){
+int main(int argc,char **argv) {
     if (argc != 4) {
         cout << "please input the target file name and log level and configuration file name\n";
         return -1;
@@ -44,7 +44,6 @@ int main(int argc,char **argv){
 
     YAML::Node config=YAML::LoadFile(argv[3]);
     std::shared_ptr<SAIL::rule::RuleManager> ymlmgr=std::make_shared<SAIL::rule::YamlRuleManager>(config);
-    (void) ymlmgr;
 
     std::shared_ptr<utils::CustomPtrace> cp = std::make_shared<utils::CustomPtraceImpl>();
     std::shared_ptr<utils::Utils> up = std::make_shared<utils::UtilsImpl>(cp);

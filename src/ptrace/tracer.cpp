@@ -34,7 +34,7 @@ void Tracer::run(/* args */)
         }
         tracees[tid]->trap();
 
-        // wake up child parent
+        // wake up child process
         ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
     }
 }
