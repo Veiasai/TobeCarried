@@ -14,7 +14,7 @@ class RuleManager
 {
 public:
     virtual ~RuleManager() {};
-    virtual std::vector<RuleCheckMsg> check(int syscallNumber, const core::SyscallParameter & sp) = 0;
+    virtual std::vector<core::RuleCheckMsg> check(int syscallNumber, const core::SyscallParameter & sp) = 0;
 };
 
 class YamlRuleManager : public RuleManager
@@ -25,7 +25,7 @@ private:
 public:
     YamlRuleManager(const YAML::Node & yaml);
     virtual ~YamlRuleManager() {};
-    virtual std::vector<RuleCheckMsg> check(int syscall, const core::SyscallParameter & sp) override;
+    virtual std::vector<core::RuleCheckMsg> check(int syscall, const core::SyscallParameter & sp) override;
 };
 
 }}

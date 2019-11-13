@@ -61,9 +61,9 @@ YamlRuleManager::YamlRuleManager(const YAML::Node &yaml)
     }
 };
 
-std::vector<RuleCheckMsg> YamlRuleManager::check(int syscall, const core::SyscallParameter &sp)
+std::vector<core::RuleCheckMsg> YamlRuleManager::check(int syscall, const core::SyscallParameter &sp)
 {
-    std::vector<RuleCheckMsg> res;
+    std::vector<core::RuleCheckMsg> res;
     for (auto &rule : rules[syscall])
     {
         res.push_back(rule->check(sp));
