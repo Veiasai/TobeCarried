@@ -49,7 +49,7 @@ int main(int argc,char **argv){
     std::shared_ptr<utils::CustomPtrace> cp = std::make_shared<utils::CustomPtraceImpl>();
     std::shared_ptr<utils::Utils> up = std::make_shared<utils::UtilsImpl>(cp);
 
-    auto tracer = std::make_unique<core::Tracer>(up, cp);
+    auto tracer = std::make_unique<core::Tracer>(up, cp, ymlmgr);
     tracer->run();
 
     return 0;

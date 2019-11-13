@@ -10,7 +10,7 @@ using namespace std;
 
 namespace SAIL { namespace core {
 
-Tracer::Tracer(std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp) : up(up), cp(cp)
+Tracer::Tracer(std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, std::shared_ptr<rule::RuleManager> rulemgr) : up(up), cp(cp), rulemgr(rulemgr)
 {
 }
 
@@ -30,7 +30,7 @@ void Tracer::run(/* args */)
 
         if (tracees.find(tid) == tracees.end()) {
             spdlog::info("[tid: tracer] Add Thread {} to tracees", tid);
-            tracees[tid] = std::make_unique<TraceeImpl>(tid, up, cp);
+            tracees[tid] = std::make_unique<TraceeImpl>(tid, up, cp, rulemgr);
         }
         tracees[tid]->trap();
 

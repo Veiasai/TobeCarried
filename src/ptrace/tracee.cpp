@@ -13,7 +13,7 @@ namespace {
 
 namespace SAIL { namespace core {
 
-TraceeImpl::TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp) : tid(tid), up(up), cp(cp)
+TraceeImpl::TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, std::shared_ptr<rule::RuleManager> rulemgr) : tid(tid), up(up), cp(cp), rulemgr(rulemgr)
 {
     this->iscalling = true;
     this->lastSyscallID = -1;  // -1 means the first syscall

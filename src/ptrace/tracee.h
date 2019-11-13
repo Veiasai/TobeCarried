@@ -6,6 +6,7 @@
 #include <map>
 
 #include "utils.h"
+#include "ruleManager.h"
 
 #define MAX_FILENAME_SIZE 256
 
@@ -44,6 +45,8 @@ private:
     std::vector<WarnInfo> report;
     std::shared_ptr<utils::Utils> up;
     std::shared_ptr<utils::CustomPtrace> cp;
+    std::shared_ptr<rule::RuleManager> rulemgr;
+
     std::map<int, char *> fdToFilename;
 
     // for buffering filename to insert into fdToFilename
@@ -64,7 +67,7 @@ private:
     // clone
     void clone();
 public:
-    TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp);
+    TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, std::shared_ptr<rule::RuleManager> rulemgr);
     virtual ~TraceeImpl() {};
     virtual void trap();
     virtual const std::vector<Systemcall> & getHistory();
