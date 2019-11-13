@@ -91,7 +91,7 @@ void TraceeImpl::open()
         spdlog::debug("[tid: {}] Open: fd: {}", tid, fd);
 
         this->syscallParams.parameters.push_back(Parameter(nonpointer, 0, NULL, fd));
-        this->syscallParams.parameters.push_back(Parameter(pointer, strlen(tmpFilename), tmpFilename, 0));
+        this->syscallParams.parameters.push_back(Parameter(pointer, MAX_FILENAME_SIZE, tmpFilename, 0));
         const int flags = (int)this->history.back().call_regs.rsi;
         this->syscallParams.parameters.push_back(Parameter(nonpointer, 0, NULL, flags));
     }
