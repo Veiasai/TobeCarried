@@ -3,6 +3,7 @@
 #include <set>
 #include <memory>
 #include "tracee.h"
+#include "report.h"
 
 namespace SAIL { namespace core {
 
@@ -13,9 +14,10 @@ private:
     std::shared_ptr<utils::Utils> up;
     std::shared_ptr<utils::CustomPtrace> cp;
     std::shared_ptr<rule::RuleManager> rulemgr;
-
+    std::shared_ptr<Report> report;
+    long brokenThreads;
 public:
-    Tracer(std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, std::shared_ptr<rule::RuleManager> rulemgr);
+    Tracer(std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report);
     ~Tracer();
     void run();
 };

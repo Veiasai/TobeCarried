@@ -1,40 +1,45 @@
-#include "report.h"
 #include <iostream>
+#include <assert.h>
+
+#include "report.h"
+#include "spdlog/spdlog.h"
 
 namespace SAIL
 {
 namespace core
 {
-ReportImpl::ReportImpl(std::string filename)
+ReportImpl::ReportImpl(const std::string & filename)
 {
     this->filename = filename;
     this->fs = std::make_unique<std::fstream>();
     fs->open(filename.c_str(), std::ios::app);
+    assert(fs->is_open());
     if (!fs->is_open())
     {
-        std::cerr << "Report error open!" << std::endl;
-        fs->clear();
+        spdlog::error("Report failed to open {}!", filename.c_str());
     }
 };
 
 size_t ReportImpl::size()
 {
-    return this->size;
+    fs->flush();
+    return fs->tellp();
 }
 
-int ReportImpl::write(const core::RuleCheckMsg &rcmsg)
+int ReportImpl::write(const long tid, const long callID, const core::RuleCheckMsg &rcmsg)
 {
     std::string approval = (rcmsg.approval) ? "pass" : "warning";
 
-    std::string reportLine = std::to_string(rcmsg.ruleID) + " " + approval + " " + rcmsg.msg + "\n";
+    (*fs) << tid << "," << callID << "," << rcmsg.ruleID << "," << approval << "," << rcmsg.msg << std::endl;
 
-    (*fs) << reportLine;
+    return 0;
+}
 
-    // update size
-    fs->seekp(0, fs->end);
-    this->size = fs->tellp();
+int ReportImpl::flush()
+{
+    fs->flush();
 
-    return 1;
+    return 0;
 }
 
 ReportImpl::~ReportImpl()

@@ -5,3 +5,7 @@ ADD_EXECUTABLE(ptrace ${DIR_SRCS})
 
 target_link_libraries(ptrace PRIVATE spdlog::spdlog)
 target_link_libraries(ptrace PRIVATE yaml-cpp)
+target_link_libraries(ptrace PRIVATE cxxopts)
+
+configure_file(example.yml example.yml)
+configure_file(start.sh start.sh)

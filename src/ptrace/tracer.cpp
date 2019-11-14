@@ -10,8 +10,11 @@ using namespace std;
 
 namespace SAIL { namespace core {
 
-Tracer::Tracer(std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, std::shared_ptr<rule::RuleManager> rulemgr) : up(up), cp(cp), rulemgr(rulemgr)
+Tracer::Tracer(std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, 
+    std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report) 
+    : up(up), cp(cp), rulemgr(rulemgr), report(report)
 {
+    brokenThreads = 0;
 }
 
 Tracer::~Tracer()
@@ -30,12 +33,21 @@ void Tracer::run(/* args */)
 
         if (tracees.find(tid) == tracees.end()) {
             spdlog::info("[tid: tracer] Add Thread {} to tracees", tid);
-            tracees[tid] = std::make_unique<TraceeImpl>(tid, up, cp, rulemgr);
+            tracees[tid] = std::make_unique<TraceeImpl>(tid, up, cp, rulemgr, report);
         }
-        tracees[tid]->trap();
-
-        // wake up child process
-        ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
+        try {  
+            tracees[tid]->trap();
+            
+            // wake up child process
+            ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
+        } catch(exception & e){
+            brokenThreads++;
+            spdlog::info("[tid: tracer] Thread {} has been broken. Msg: {}", tid, e.what());
+            if (tracees.size() == brokenThreads){
+                spdlog::info("[tid: tracer] Finish the analysis");
+                return;
+            }
+        }
     }
 }
 
