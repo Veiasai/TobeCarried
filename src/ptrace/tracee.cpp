@@ -3,6 +3,7 @@
 #include "tracee.h"
 #include "utils.h"
 #include <stdexcept>
+#include <algorithm>
 
 namespace {
 #include <sys/ptrace.h>
@@ -19,10 +20,12 @@ TraceeImpl::TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_pt
     : tid(tid), up(up), cp(cp), rulemgr(rulemgr), report(report)
 {
     this->iscalling = true;
+    this->callID = 0;
     this->lastSyscallID = -1; // -1 means the first syscall
     this->fdToFilename[0] = (char *)"standard-input";
     this->fdToFilename[1] = (char *)"standard-output";
     this->fdToFilename[2] = (char *)"standard-error";
+    this->syscallParams.parameters.resize(7);
     memset(tmpFilename, 0, MAX_FILENAME_SIZE);
 }
 
@@ -66,14 +69,20 @@ void TraceeImpl::trap()
             recvfrom(); break;
         case SYS_sendto:
             sendto(); break;
+        case SYS_openat:
+            // TODO
         default:
-            break;
+            return;
     }
 
     // check
     if (!this->iscalling) {
+        spdlog::debug("[tid: {}] Start Check SYSCALL {}", tid, orig_rax);
         std::vector<RuleCheckMsg> cnt = this->rulemgr->check(orig_rax, this->syscallParams);
-        for (auto & checkMsg : cnt){   
+        spdlog::debug("[tid: {}] Finish Check SYSCALL {}, checkMsgSize {}", tid, orig_rax, cnt.size());
+        for (auto & checkMsg : cnt){
+            //TODO log
+            // spdlog::debug("[tid: {}] Report CheckMsg {}", tid, checkMsg);
             report->write(this->tid, this->callID, checkMsg);
         }
         this->callID++;
@@ -101,50 +110,69 @@ void TraceeImpl::open()
         fdToFilename[fd] = tmpFilename;
         spdlog::debug("[tid: {}] Open: fd: {}", tid, fd);
 
-        this->syscallParams.parameters.push_back(Parameter(nonpointer, 0, NULL, fd));
-        this->syscallParams.parameters.push_back(Parameter(pointer, MAX_FILENAME_SIZE, tmpFilename, 0));
+        this->syscallParams.parameters[ParameterIndex::Ret] = (Parameter(nonpointer, 0, NULL, fd));
+        this->syscallParams.parameters[ParameterIndex::First] = (Parameter(pointer, MAX_FILENAME_SIZE, tmpFilename, 0));
         const int flags = (int)this->history.back().call_regs.rsi;
-        this->syscallParams.parameters.push_back(Parameter(nonpointer, 0, NULL, flags));
+        this->syscallParams.parameters[ParameterIndex::Second] = (Parameter(nonpointer, 0, NULL, flags));
     }
 }
 void TraceeImpl::read()
 {
     if (this->iscalling) {
         const int fd = (int)this->history.back().call_regs.rdi;
+        spdlog::debug("[tid: {}] Read Call: fd: {}", tid, fd);
         const char *filename = fdToFilename[fd];
-        assert(filename);
-        spdlog::debug("[tid: {}] Read: filename: {}", tid, filename);
-        spdlog::debug("[tid: {}] Read: fd: {}", tid, fd);
+        if (filename == nullptr){  
+            spdlog::debug("[tid: {}] Read Call: read a fd {} without filename record", tid, fd);
+        }else{
+            spdlog::debug("[tid: {}] Read Call: filename: {}", tid, filename);
+        }
     }
     else {
         const ssize_t size = this->history.back().ret_regs.rax;
         const int fd = (int)this->history.back().call_regs.rdi;
         const char *filename = fdToFilename[fd];
+        if (filename == nullptr){  
+            spdlog::debug("[tid: {}] Read Ret: read a fd {} without filename record", tid, fd);
+        }else{
+            spdlog::debug("[tid: {}] Read Ret: filename: {}", tid, filename);
+        }
         const char *buf = (char *)this->history.back().call_regs.rsi;
         char localBuf[MAX_READ_SIZE];
         this->up->readBytesFrom(this->tid, buf, localBuf, size);
 
-        spdlog::debug("[tid: {}] Read: filename: {} content: {}", tid, filename, localBuf);
+        spdlog::debug("[tid: {}] Read Ret: content: {}", tid, localBuf);
     }
 }
 void TraceeImpl::write()
 {
     if (this->iscalling) {
         const int fd = (int)this->history.back().call_regs.rdi;
+        spdlog::debug("[tid: {}] Write Call: fd: {}", tid, fd);
         const char *filename = fdToFilename[fd];
-        assert(filename);
-        spdlog::debug("[tid: {}] Write: filename: {}", tid, filename);
-        spdlog::debug("[tid: {}] Write: fd: {}", tid, fd);
+        if (filename == nullptr){  
+            spdlog::debug("[tid: {}] Write Call: write a fd {} without filename record", tid, fd);
+        }else{
+            spdlog::debug("[tid: {}] Write Call: filename: {}", tid, filename);
+        }
     }
     else {
-        const ssize_t size = this->history.back().ret_regs.rax;
+        const size_t size = this->history.back().ret_regs.rax;
         const int fd = (int)this->history.back().call_regs.rdi;
+        spdlog::debug("[tid: {}] Write Ret: write a fd {} , size {}", tid, fd, size);
         const char *filename = fdToFilename[fd];
+        if (filename == nullptr){  
+            spdlog::debug("[tid: {}] Write Ret: write a fd {} without filename record", tid, fd);
+        }else{
+            spdlog::debug("[tid: {}] Write Ret: filename: {}", tid, filename);
+        }
         const char *buf = (char *)this->history.back().call_regs.rsi;
         char localBuf[MAX_READ_SIZE];
-        this->up->readBytesFrom(this->tid, buf, localBuf, size);
+        localBuf[MAX_READ_SIZE] = '\0';
+        // TODO
+        this->up->readBytesFrom(this->tid, buf, localBuf, std::min(size, MAX_READ_SIZE) - 1);
 
-        spdlog::debug("[tid: {}] Read: filename: {} content: {}", tid, filename, localBuf);
+        spdlog::debug("[tid: {}] Write Ret: content: {}", tid, localBuf);
     }
 }
 

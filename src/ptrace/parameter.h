@@ -20,6 +20,7 @@ enum ParameterType
 {
     pointer,
     nonpointer,
+    null,
 };
 
 struct Parameter
@@ -31,6 +32,10 @@ struct Parameter
         void * p;
         long value;
     } value;
+
+    Parameter() {
+        type = ParameterType::null;
+    }
 
     Parameter(ParameterType ftype, long fsize, void *fp, long fvalue) {
         if (ftype == pointer) {

@@ -11,8 +11,8 @@
 
 namespace SAIL { namespace core {
     
-const int MAX_FILENAME_SIZE = 256;
-const int MAX_READ_SIZE = 1 << 16;  // cannot be too much, otherwise segmentation fault will rise when defining localBuf
+const size_t MAX_FILENAME_SIZE = 256;
+const size_t MAX_READ_SIZE = 1 << 16;  // cannot be too much, otherwise segmentation fault will rise when defining localBuf
 
 struct Systemcall {
     struct user_regs_struct call_regs;
