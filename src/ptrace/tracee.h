@@ -7,6 +7,7 @@
 
 #include "utils.h"
 #include "ruleManager.h"
+#include "report.h"
 
 namespace SAIL { namespace core {
     
@@ -40,14 +41,15 @@ public:
 class TraceeImpl : public Tracee
 {
 private:
-    int tid;
+    long tid;
+    long callID;    //  auto-increment ID for every call
     volatile bool iscalling;
     std::vector<Systemcall> history;
     std::vector<std::vector<RuleCheckMsg>> ruleCheckMsg;
     std::shared_ptr<utils::Utils> up;
     std::shared_ptr<utils::CustomPtrace> cp;
     std::shared_ptr<rule::RuleManager> rulemgr;
-
+    std::shared_ptr<Report> report;
     std::map<int, char *> fdToFilename;
 
     // for buffering filename to insert into fdToFilename
@@ -69,7 +71,7 @@ private:
     // clone
     void clone();
 public:
-    TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, std::shared_ptr<rule::RuleManager> rulemgr);
+    TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report);
     virtual ~TraceeImpl() {};
     virtual void trap();
     virtual const std::vector<Systemcall> & getHistory();

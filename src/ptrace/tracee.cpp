@@ -2,6 +2,7 @@
 #include "spdlog/sinks/basic_file_sink.h"
 #include "tracee.h"
 #include "utils.h"
+#include <stdexcept>
 
 namespace {
 #include <sys/ptrace.h>
@@ -13,7 +14,9 @@ namespace {
 
 namespace SAIL { namespace core {
 
-TraceeImpl::TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, std::shared_ptr<rule::RuleManager> rulemgr) : tid(tid), up(up), cp(cp), rulemgr(rulemgr)
+TraceeImpl::TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, 
+    std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report) 
+    : tid(tid), up(up), cp(cp), rulemgr(rulemgr), report(report)
 {
     this->iscalling = true;
     this->lastSyscallID = -1; // -1 means the first syscall
@@ -47,6 +50,8 @@ void TraceeImpl::trap()
 
     switch (orig_rax)
     {
+        case -1:
+            throw std::logic_error("orig_rax get -1"); break;
         case SYS_clone: 
             clone(); break;
         case SYS_open:
@@ -67,8 +72,13 @@ void TraceeImpl::trap()
 
     // check
     if (!this->iscalling) {
-        const std::vector<RuleCheckMsg> cnt = this->rulemgr->check(orig_rax, this->syscallParams);
-        this->ruleCheckMsg.push_back(cnt);
+        std::vector<RuleCheckMsg> cnt = this->rulemgr->check(orig_rax, this->syscallParams);
+        for (auto & checkMsg : cnt){   
+            report->write(this->tid, this->callID, checkMsg);
+        }
+        this->callID++;
+        report->flush();
+        this->ruleCheckMsg.emplace_back(std::move(cnt));
     }
 }
 
