@@ -129,7 +129,8 @@ void TraceeImpl::read()
         }
     }
     else {
-        const ssize_t size = this->history.back().ret_regs.rax;
+        // rax can be -1, but std::min required two args with the same type
+        const size_t size = this->history.back().ret_regs.rax;
         const int fd = (int)this->history.back().call_regs.rdi;
         const char *filename = fdToFilename[fd];
         if (filename == nullptr){  
@@ -139,9 +140,12 @@ void TraceeImpl::read()
         }
         const char *buf = (char *)this->history.back().call_regs.rsi;
         char localBuf[MAX_READ_SIZE];
-        this->up->readBytesFrom(this->tid, buf, localBuf, size);
+        this->up->readBytesFrom(this->tid, buf, localBuf, std::min(size, MAX_READ_SIZE) - 1);
 
         spdlog::debug("[tid: {}] Read Ret: content: {}", tid, localBuf);
+        this->syscallParams.parameters[ParameterIndex::Ret] = (Parameter(nonpointer, 0, NULL, size));
+        this->syscallParams.parameters[ParameterIndex::First] = (Parameter(nonpointer, 0, NULL, fd));
+        this->syscallParams.parameters[ParameterIndex::Second] = (Parameter(pointer, size, localBuf, 0));
     }
 }
 void TraceeImpl::write()
@@ -173,6 +177,10 @@ void TraceeImpl::write()
         this->up->readBytesFrom(this->tid, buf, localBuf, std::min(size, MAX_READ_SIZE) - 1);
 
         spdlog::debug("[tid: {}] Write Ret: content: {}", tid, localBuf);
+        this->syscallParams.parameters[ParameterIndex::Ret] = (Parameter(nonpointer, 0, NULL, size));
+        this->syscallParams.parameters[ParameterIndex::First] = (Parameter(nonpointer, 0, NULL, fd));
+        // size of pointer: actual size or required count ?
+        this->syscallParams.parameters[ParameterIndex::Second] = (Parameter(pointer, size, localBuf, 0));
     }
 }
 
