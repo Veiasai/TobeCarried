@@ -1,6 +1,9 @@
 #pragma once
 
 #include <vector>
+#include <stdio.h>
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/basic_file_sink.h"
 
 namespace SAIL { namespace core {
 

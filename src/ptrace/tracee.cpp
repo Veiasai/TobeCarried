@@ -26,7 +26,7 @@ TraceeImpl::TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_pt
     this->fdToFilename[1] = (char *)"standard-output";
     this->fdToFilename[2] = (char *)"standard-error";
     this->syscallParams.parameters.resize(7);
-    memset(tmpFilename, 0, MAX_FILENAME_SIZE);
+    memset(localFilename, 0, MAX_FILENAME_SIZE);
 }
 
 void TraceeImpl::trap()
@@ -95,29 +95,32 @@ void TraceeImpl::trap()
 void TraceeImpl::open()
 {
     // fd 0, 1, 2 never be opened, handle specially in constructor
+    static char localFilename[MAX_FILENAME_SIZE];
     if (this->iscalling) {
         // filename is address in target program memory space
         // need to grab it to tracee memory space
         // when encountering pointer, caution needed
         const char *filename = (char *)this->history.back().call_regs.rdi;
         assert(filename);
-        memset(tmpFilename, 0, MAX_FILENAME_SIZE);
-        this->up->readStrFrom(this->tid, filename, tmpFilename, MAX_FILENAME_SIZE);
-
-        spdlog::debug("[tid: {}] Open: filename: {}", tid, tmpFilename);
-    } else {
-        const unsigned long long int fd = this->history.back().ret_regs.rax;
-        fdToFilename[fd] = tmpFilename;
-        spdlog::debug("[tid: {}] Open: fd: {}", tid, fd);
-
-        this->syscallParams.parameters[ParameterIndex::Ret] = (Parameter(nonpointer, 0, NULL, fd));
-        this->syscallParams.parameters[ParameterIndex::First] = (Parameter(pointer, MAX_FILENAME_SIZE, tmpFilename, 0));
+        
+        this->up->readStrFrom(this->tid, filename, localFilename, MAX_FILENAME_SIZE);
+        this->syscallParams.parameters[ParameterIndex::First] = (Parameter(pointer, MAX_FILENAME_SIZE, localFilename, 0));
+        
         const int flags = (int)this->history.back().call_regs.rsi;
         this->syscallParams.parameters[ParameterIndex::Second] = (Parameter(nonpointer, 0, NULL, flags));
+
+        spdlog::debug("[tid: {}] Open: filename: {}", tid, localFilename);
+    } else {
+        const unsigned long long int fd = this->history.back().ret_regs.rax;
+        fdToFilename[fd] = (char *)this->syscallParams.parameters[ParameterIndex::First].value.p;
+        this->syscallParams.parameters[ParameterIndex::Ret] = (Parameter(nonpointer, 0, NULL, fd));
+
+        spdlog::debug("[tid: {}] Open: fd: {} filename: {}", tid, fd, fdToFilename[fd]);
     }
 }
 void TraceeImpl::read()
 {
+
     if (this->iscalling) {
         const int fd = (int)this->history.back().call_regs.rdi;
         spdlog::debug("[tid: {}] Read Call: fd: {}", tid, fd);
