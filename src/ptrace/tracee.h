@@ -50,7 +50,6 @@ private:
     std::shared_ptr<utils::CustomPtrace> cp;
     std::shared_ptr<rule::RuleManager> rulemgr;
     std::shared_ptr<Report> report;
-    std::map<int, char *> fdToFilename;
 
     // for buffering filename to insert into fdToFilename
     char localFilename[MAX_FILENAME_SIZE];
