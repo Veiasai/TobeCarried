@@ -10,7 +10,7 @@ UtilsImpl::UtilsImpl(std::shared_ptr<CustomPtrace> _cp) : cp(_cp)
 int UtilsImpl::readStrFrom(int tid, const char * p, char * buf, size_t s)
 {
     for (int i = 0; i < s; i += sizeof(long)) {
-        long val = this->cp->peekData(tid, (long)p + i * sizeof(long));
+        long val = this->cp->peekData(tid, (long)p + i);
         char * c = (char *)&val;
         for (int j = 0; j < 8; j++) {
             buf[i + j] = c[j];
