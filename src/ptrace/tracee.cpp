@@ -48,6 +48,13 @@ void TraceeImpl::trap()
         cp->getRegs(this->tid, &this->history.back().ret_regs);
     }
 
+    // get all reached filenames
+    this->up->getFilenamesByProc(tid,fileset);
+
+    // output(refresh) fileset to files.txt
+    std::string outfilename="./logs/"+std::to_string(tid)+"_reached_files.txt";
+    this->up->strset2file(outfilename,fileset);
+
     switch (orig_rax)
     {
         case -1:
