@@ -50,10 +50,9 @@ private:
     std::shared_ptr<utils::CustomPtrace> cp;
     std::shared_ptr<rule::RuleManager> rulemgr;
     std::shared_ptr<Report> report;
-    std::map<int, char *> fdToFilename;
 
     // for buffering filename to insert into fdToFilename
-    char tmpFilename[MAX_FILENAME_SIZE];
+    char localFilename[MAX_FILENAME_SIZE];
     // for buffering syscall id to check whether syscall returns
     long lastSyscallID;
     SyscallParameter syscallParams;

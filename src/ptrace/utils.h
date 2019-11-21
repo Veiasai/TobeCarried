@@ -3,7 +3,13 @@
 #include <sys/ptrace.h>
 #include <sys/user.h>
 #include <sys/types.h>
+#include <stdlib.h>
 #include <memory>
+#include <iostream>
+#include <fstream>
+
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/basic_file_sink.h"
 
 namespace SAIL { namespace utils {
 
@@ -33,6 +39,7 @@ public:
     virtual ~Utils() {};
     virtual int readStrFrom(int tid, const char * p, char * buf, size_t s) = 0;
     virtual int readBytesFrom(int tid, const char * p, char * buf, size_t s) = 0;
+    virtual int getFilenameByFd(int tid, int fd, std::string &filename) = 0;
 };
 
 class UtilsImpl : public Utils
@@ -44,6 +51,7 @@ public:
     virtual ~UtilsImpl() {};
     virtual int readStrFrom(int tid, const char * p, char * buf, size_t s);
     virtual int readBytesFrom(int tid, const char * p, char * buf, size_t s);
+    virtual int getFilenameByFd(int tid, int fd, std::string &filename);
 };
     
 }}

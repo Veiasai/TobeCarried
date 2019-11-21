@@ -10,16 +10,22 @@ namespace SAIL { namespace Test {
 using namespace testing;
 using namespace utils;
 using namespace core;
+using namespace rule;
 
 class TraceeFixture: public ::testing::Test {
 public:
     std::shared_ptr<MockCustomPtrace> cp;
     std::shared_ptr<MockUtils> up;
+    std::shared_ptr<RuleManager> rulemgr;
+    std::shared_ptr<Report> report;
+
 public: 
    TraceeFixture() { 
         cp = std::make_shared<MockCustomPtrace>();
         up = std::make_shared<MockUtils>();
-   } 
+        rulemgr = std::make_shared<MockRuleManager>();
+        report = std::make_shared<MockReport>();
+   }
 
    void SetUp( ) { 
        // code here will execute just before the test ensues 
@@ -33,7 +39,7 @@ public:
 };
 
 TEST_F (TraceeFixture, Clone) { 
-    TraceeImpl traceeImpl(10, up, cp);
+    TraceeImpl traceeImpl(10, up, cp, rulemgr, report);
 
     struct user_regs_struct call_regs;
     EXPECT_CALL(*cp, peekUser(10, _))
