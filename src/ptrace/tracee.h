@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include <set>
 
 #include "utils.h"
 #include "ruleManager.h"
@@ -50,6 +51,9 @@ private:
     std::shared_ptr<utils::CustomPtrace> cp;
     std::shared_ptr<rule::RuleManager> rulemgr;
     std::shared_ptr<Report> report;
+
+    // for files tracee has been reached
+    std::set<std::string> fileset;
 
     // for buffering filename to insert into fdToFilename
     char localFilename[MAX_FILENAME_SIZE];
