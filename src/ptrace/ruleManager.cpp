@@ -16,7 +16,7 @@ YamlRuleManager::YamlRuleManager(const YAML::Node &yaml)
     ruleMatch(blacklist, this->blacklist_rules);
 };
 
-int ruleMatch(const YAML::Node &yaml, std::map<int, std::vector<std::unique_ptr<Rule>>> &rules)
+int YamlRuleManager::ruleMatch(const YAML::Node &yaml, std::map<int, std::vector<std::unique_ptr<Rule>>> &rules)
 {
     for (auto ruleNode = yaml.begin(); ruleNode != yaml.end(); ruleNode++)
     {

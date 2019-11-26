@@ -9,6 +9,7 @@
 #include "utils.h"
 #include "ruleManager.h"
 #include "report.h"
+#include "whitelist.h"
 
 namespace SAIL { namespace core {
     
@@ -54,6 +55,8 @@ private:
 
     // for files tracee has been reached
     std::set<std::string> fileset;
+    // for whitelist
+    std::shared_ptr<Whitelist> whitelist;
 
     // for buffering filename to insert into fdToFilename
     char localFilename[MAX_FILENAME_SIZE];

@@ -1,12 +1,11 @@
-- whitelist:
+whitelist:
 
-
-
-- sysnum: 2
-  id: 1
-  name: hello
-  level: 2
-  specs:
-    - paraIndex: 1
-      action: matchRe
-      value: testFile
+blacklist:
+  - sysnum: 2
+    id: 1
+    name: hello
+    level: 2
+    specs:
+      - paraIndex: 1
+        action: matchRe
+        value: testFile
