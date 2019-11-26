@@ -9,6 +9,15 @@ namespace rule
 
 YamlRuleManager::YamlRuleManager(const YAML::Node &yaml)
 {
+    const YAML::Node whitelist = yaml["whitelist"];
+    const YAML::Node blacklist = yaml["blacklist"];
+
+    ruleMatch(whitelist, this->whitelist_rules);
+    ruleMatch(blacklist, this->blacklist_rules);
+};
+
+int ruleMatch(const YAML::Node &yaml, std::map<int, std::vector<std::unique_ptr<Rule>>> &rules)
+{
     for (auto ruleNode = yaml.begin(); ruleNode != yaml.end(); ruleNode++)
     {
         int sysnum = (*ruleNode)["sysnum"].as<int>();
@@ -29,8 +38,6 @@ YamlRuleManager::YamlRuleManager(const YAML::Node &yaml)
             }
             else if (action == "matchBytes")
             {
-                // how to input bytes?
-                // rule->matchBytes(idx, )
                 std::vector<int> values = (*spec)["value"].as<std::vector<int>>();
                 std::vector<unsigned char> bytes;
                 for (auto e : values)
@@ -59,15 +66,17 @@ YamlRuleManager::YamlRuleManager(const YAML::Node &yaml)
         // add the rule to the map
         rules[sysnum].emplace_back(std::move(rule));
     }
-};
+}
 
 std::vector<core::RuleCheckMsg> YamlRuleManager::check(int syscall, const core::SyscallParameter &sp)
 {
     std::vector<core::RuleCheckMsg> res;
-    for (auto &rule : rules[syscall])
-    {
+    for (auto &rule : whitelist_rules[syscall])
         res.push_back(rule->check(sp));
-    }
+
+    for (auto &rule : blacklist_rules[syscall])
+        res.push_back(rule->check(sp));
+
     return res;
 };
 
