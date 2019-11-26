@@ -92,9 +92,9 @@ int UtilsImpl::getFilenamesByProc(int tid, std::set<std::string> &fileset)
         {
             std::string filename = ent->d_name;
 
-            char buf[512] = {'\0'};
             if (NONEEDFILENAME.find(filename) == NONEEDFILENAME.end())
             {
+                char buf[512] = {'\0'};
                 filename = dirpath + ent->d_name;
                 readlink(filename.c_str(), buf, 512);
                 fileset.insert(std::string(buf));
