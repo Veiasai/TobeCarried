@@ -111,7 +111,7 @@ int UtilsImpl::getFilenamesByProc(int tid, std::set<std::string> &fileset)
     return 0;
 }
 
-int UtilsImpl::strset2file(std::string &filename, std::set<std::string> &fileset)
+int UtilsImpl::strset2file(const std::string &filename, const std::set<std::string> &fileset)
 {
     std::fstream fs;
 

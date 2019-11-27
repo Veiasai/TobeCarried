@@ -38,6 +38,7 @@ public:
     virtual void trap() = 0;
     virtual const std::vector<Systemcall> & getHistory() = 0;
     virtual const std::vector<std::vector<RuleCheckMsg>> & getRuleCheckMsg() = 0;
+    virtual void end() = 0;
 };
 
 class TraceeImpl : public Tracee
@@ -79,9 +80,10 @@ private:
 public:
     TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report);
     virtual ~TraceeImpl() {};
-    virtual void trap();
-    virtual const std::vector<Systemcall> & getHistory();
-    virtual const std::vector<std::vector<RuleCheckMsg>> & getRuleCheckMsg();
+    virtual void trap() override;
+    virtual const std::vector<Systemcall> & getHistory() override;
+    virtual const std::vector<std::vector<RuleCheckMsg>> & getRuleCheckMsg() override;
+    virtual void end() override;
 };
 
 }}

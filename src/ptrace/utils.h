@@ -42,7 +42,7 @@ public:
     virtual int readBytesFrom(int tid, const char *p, char *buf, size_t s) = 0;
     virtual int getFilenameByFd(int tid, int fd, std::string &filename) = 0;
     virtual int getFilenamesByProc(int tid,std::set<std::string> &fileset) = 0;
-    virtual int strset2file(std::string &filename, std::set<std::string> &fileset)=0;
+    virtual int strset2file(const std::string &filename, const std::set<std::string> &fileset)=0;
 };
 
 class UtilsImpl : public Utils
@@ -57,7 +57,7 @@ public:
     virtual int readBytesFrom(int tid, const char *p, char *buf, size_t s);
     virtual int getFilenameByFd(int tid, int fd, std::string &filename);
     virtual int getFilenamesByProc(int tid,std::set<std::string> &fileset) override;
-    virtual int strset2file(std::string &filename, std::set<std::string> &fileset) override;
+    virtual int strset2file(const std::string &filename, const std::set<std::string> &fileset) override;
 };
 
 } // namespace utils

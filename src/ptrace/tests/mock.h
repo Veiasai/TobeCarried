@@ -29,6 +29,8 @@ public:
     MOCK_METHOD(int, readStrFrom, (int tid, const char * p, char * buf, size_t s), (override));
     MOCK_METHOD(int, readBytesFrom, (int tid, const char * p, char * buf, size_t s), (override));
     MOCK_METHOD(int, getFilenameByFd, (int tid, int fd, std::string &filename), (override));
+    MOCK_METHOD(int, getFilenamesByProc, (int tid,std::set<std::string> &fileset), (override));
+    MOCK_METHOD(int, strset2file, (const std::string &filename, const std::set<std::string> &fileset), (override));
 };
 
 class MockRuleManager : public RuleManager
