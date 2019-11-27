@@ -16,8 +16,8 @@ class TraceeFixture: public ::testing::Test {
 public:
     std::shared_ptr<MockCustomPtrace> cp;
     std::shared_ptr<MockUtils> up;
-    std::shared_ptr<RuleManager> rulemgr;
-    std::shared_ptr<Report> report;
+    std::shared_ptr<MockRuleManager> rulemgr;
+    std::shared_ptr<MockReport> report;
 
 public: 
    TraceeFixture() { 
@@ -46,6 +46,9 @@ TEST_F (TraceeFixture, Clone) {
       .WillOnce(Return(SYS_clone));
     EXPECT_CALL(*cp, getRegs(10, _))
       .WillOnce(Return(0));
+    EXPECT_CALL(*up, getFilenamesByProc(_,_)).Times(2);
+    EXPECT_CALL(*rulemgr, check(_,_)).Times(1);
+    EXPECT_CALL(*report, flush()).Times(1);
 
     traceeImpl.trap();
 
