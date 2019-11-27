@@ -33,7 +33,7 @@ void Tracer::run(/* args */)
             spdlog::info("[tid: tracer] Thread {} has exited", tid);
             if (tracees.size() == brokenThreads){
                 spdlog::info("[tid: tracer] Finish the analysis");
-                return;
+                break;
             }
         }
         spdlog::info("[tid: tracer] Thread {} traps", tid);
@@ -61,6 +61,7 @@ void Tracer::run(/* args */)
             spdlog::error("[tid: tracer] unexpected Thread {}", tid);
             tracees[tid] = std::make_unique<TraceeImpl>(tid, up, cp, rulemgr, report);
         }
+
         try {
             if (WSTOPSIG(status) == SIGTRAP)
             {
@@ -74,16 +75,12 @@ void Tracer::run(/* args */)
             // wake up child process
             ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
         } catch(exception & e){
-            brokenThreads++;
-            spdlog::info("[tid: tracer] Thread {} has been broken. Msg: {}", tid, e.what());
-            if (tracees.size() == brokenThreads){
-                spdlog::info("[tid: tracer] Finish the analysis");
-                for (const auto & tracee : tracees){
-                    tracee.second->end();
-                }
-                return;
-            }
+            spdlog::error("[tid: tracer] Thread {} has been broken. Msg: {}", tid, e.what());
         }
+    }
+
+    for (const auto & tracee : tracees){
+        tracee.second->end();
     }
 }
 
