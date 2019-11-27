@@ -60,7 +60,7 @@ void startChild(const std::string & target, const std::vector<std::string> & arg
     }
     wait(NULL);
     spdlog::debug("start child ret: {}", child);
-    long ptraceOption = PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK;
+    long ptraceOption = PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEEXIT;
 	ptrace(PTRACE_SETOPTIONS, child, NULL, ptraceOption);
     ptrace(PTRACE_SYSCALL, child, NULL, NULL);
 }

@@ -31,16 +31,7 @@ void TraceeImpl::trap()
 {  
     // grab syscall id
     long orig_rax = cp->peekUser(this->tid, 8 * ORIG_RAX);
-    spdlog::info("[tid: {}] syscall {}", this->tid, orig_rax);
-
-    if (this->iscalling && orig_rax == lastSyscallID) {
-        // prevent that some syscalls don't return
-        this->iscalling = false;
-    }
-    else if (!this->iscalling) {
-        this->iscalling = true;
-    }
-    this->lastSyscallID = orig_rax;
+    spdlog::info("[tid: {}] syscall {} calling {}", this->tid, orig_rax, this->iscalling);
 
     if (this->iscalling) {
         this->history.emplace_back();
@@ -48,9 +39,8 @@ void TraceeImpl::trap()
     } else {
         cp->getRegs(this->tid, &this->history.back().ret_regs);
     }
-
     // get all reached filenames
-    this->up->getFilenamesByProc(tid,fileset);
+    this->up->getFilenamesByProc(tid, fileset);
 
     // output(refresh) fileset to files.txt
     std::string outfilename="./logs/"+std::to_string(tid)+"_reached_files.txt";
@@ -79,6 +69,7 @@ void TraceeImpl::trap()
         case SYS_openat:
             // TODO
         default:
+            this->iscalling = !this->iscalling;
             return;
     }
 
@@ -96,6 +87,7 @@ void TraceeImpl::trap()
         report->flush();
         this->ruleCheckMsg.emplace_back(std::move(cnt));
     }
+    this->iscalling = !this->iscalling;
 }
 
 // file
@@ -216,14 +208,10 @@ void TraceeImpl::clone()
         spdlog::info("SYS_clone call in tid {}", this->tid);
     } else {
         long rax = this->history.back().ret_regs.rax;
-        if (rax != 0) {
-            // return in parent thread (return value in child thread is 0)
-            // cp->attach(rax);
-            spdlog::info("SYS_clone call {}, {}", rax, cp->attach(rax));
-            spdlog::error("SYS_clone call errno: {}", errno);
-
+        if (rax < 0) {
+            spdlog::error("SYS_clone ret less than 0");
         }
-        spdlog::info("SYS_clone call return {} in tid {}", rax, this->tid);
+        spdlog::info("SYS_clone call ret {} in tid {}", rax, this->tid);
     }
 }
 

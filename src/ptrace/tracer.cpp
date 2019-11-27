@@ -3,6 +3,7 @@
 #include <sys/ptrace.h>
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/fmt/bin_to_hex.h"
 
 #include "tracer.h"
 
@@ -27,36 +28,48 @@ void Tracer::run(/* args */)
     
     while(1) {
         int tid = wait(&status);
-        if(WIFEXITED(status))
-            break;
+        if(WIFEXITED(status)) {
+            brokenThreads++;
+            spdlog::info("[tid: tracer] Thread {} has exited", tid);
+            if (tracees.size() == brokenThreads){
+                spdlog::info("[tid: tracer] Finish the analysis");
+                return;
+            }
+        }
         spdlog::info("[tid: tracer] Thread {} traps", tid);
         spdlog::info("[tid: tracer] signal: {}", WSTOPSIG(status));
+        spdlog::info("[tid: tracer] before status: {:x}", status);
 
-        spdlog::info("[tid: tracer] before status: {}", status);
-
-        if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGTRAP)
-        {
-            //当一个线程创建另一个线程返回时，收到的信号
-            pid_t new_pid;
-            
-            if ((status >> 8) == (SIGTRAP | PTRACE_EVENT_CLONE << 8))
-            {
-                if (ptrace(PTRACE_GETEVENTMSG, tid, 0, &new_pid )
-                        != -1)
-                {
-                    spdlog::debug("thread {} created\n", new_pid);
-
-                }
-
+        if (status >> 16 != 0){
+            long msg;
+            ptrace(PTRACE_GETEVENTMSG, tid, 0, (long) &msg);
+            spdlog::info("PTRACE_GETEVENTMSG {}", msg);
+            if ((status >> 8) == (SIGTRAP | PTRACE_EVENT_FORK << 8)) {
+                int newid = static_cast<int>(msg);
+                tracees[newid] = std::make_unique<TraceeImpl>(newid, up, cp, rulemgr, report);
+                ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
+                ptrace(PTRACE_SYSCALL, newid, NULL, NULL);
+                continue;
+            }
+            else if ((status >> 8) == (SIGTRAP | (PTRACE_EVENT_EXIT << 8))) {
+                ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
+                continue;
             }
         }
 
         if (tracees.find(tid) == tracees.end()) {
-            spdlog::info("[tid: tracer] Add Thread {} to tracees", tid);
+            spdlog::error("[tid: tracer] unexpected Thread {}", tid);
             tracees[tid] = std::make_unique<TraceeImpl>(tid, up, cp, rulemgr, report);
         }
-        try {  
-            tracees[tid]->trap();
+        try {
+            if (WSTOPSIG(status) == SIGTRAP)
+            {
+                tracees[tid]->trap();
+            }
+            else if (WSTOPSIG(status) == SIGSTOP)
+            {
+                spdlog::info("[tid: tracer] status == SIGSTOP");
+            }
             
             // wake up child process
             ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
