@@ -224,14 +224,14 @@ const std::vector<std::vector<RuleCheckMsg>> & TraceeImpl::getRuleCheckMsg()
 void TraceeImpl::end()
 {
     // output(refresh) fileset to files.txt
-    std::string outfilename="./logs/"+std::to_string(tid)+"_reached_files.txt";
-    this->up->strset2file(outfilename,fileset);
+    std::string outfilename="./logs/"+std::to_string(this->tid)+"_reached_files.txt";
+    this->up->strset2file(outfilename, this->fileset);
 
     // whitelist
     whitelist = std::make_shared<WhitelistImpl>("whitelist.yml");
     std::set<std::string> whitelist_result = whitelist->Check(fileset);
-    std::string outfilename2="./logs/"+std::to_string(tid)+"_reached_files_report.txt";
-    this->up->strset2file(outfilename2,whitelist_result);
+    std::string outfilename2="./logs/"+std::to_string(this->tid)+"_reached_files_report.txt";
+    this->up->strset2file(outfilename2, whitelist_result);
 }
 
 }}
