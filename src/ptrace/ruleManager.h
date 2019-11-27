@@ -14,7 +14,6 @@ class RuleManager
 {
 public:
     virtual ~RuleManager() {};
-    virtual int ruleMatch(const YAML::Node & yaml,std::map<int, std::vector<std::unique_ptr<Rule>>> &rules) = 0;
     virtual std::vector<core::RuleCheckMsg> check(int syscallNumber, const core::SyscallParameter & sp) = 0;
 };
 
@@ -27,7 +26,7 @@ private:
 public:
     YamlRuleManager(const YAML::Node & yaml);
     virtual ~YamlRuleManager() {};
-    virtual int ruleMatch(const YAML::Node & yaml,std::map<int, std::vector<std::unique_ptr<Rule>>> &rules) override;
+    int ruleMatch(const YAML::Node & yaml,std::map<int, std::vector<std::unique_ptr<Rule>>> &rules);
     virtual std::vector<core::RuleCheckMsg> check(int syscall, const core::SyscallParameter & sp) override;
 };
 

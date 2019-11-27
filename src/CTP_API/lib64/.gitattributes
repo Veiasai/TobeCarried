@@ -1,3 +1,0 @@
-libLinuxDataCollect_v_info_6.3.15_P2_20190403_exec_6.3.15_20190220.so filter=lfs diff=lfs merge=lfs -text
-libthostmduserapi_v_info_6.3.15_P2_20190403_exec_6.3.15_20190220.so filter=lfs diff=lfs merge=lfs -text
-libthosttraderapi_v_info_6.3.15_P2_20190403_exec_6.3.15_20190220.so filter=lfs diff=lfs merge=lfs -text

@@ -45,6 +45,9 @@ void Tracer::run(/* args */)
             spdlog::info("[tid: tracer] Thread {} has been broken. Msg: {}", tid, e.what());
             if (tracees.size() == brokenThreads){
                 spdlog::info("[tid: tracer] Finish the analysis");
+                for (const auto & tracee : tracees){
+                    tracee.second->end();
+                }
                 return;
             }
         }
