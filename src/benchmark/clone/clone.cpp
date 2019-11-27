@@ -10,11 +10,11 @@
 using namespace std;
 
 static int child_func(void* arg) {
-  char* buf = (char*)arg;
-  printf("Child sees buf = \"%s\"\n", buf);
-  strcpy(buf, "hello from child");
-  printf("Child  = \"%x\"\n", buf);
-  printf("Child updates buf = \"%s\"\n", buf);
+  // char* buf = (char*)arg;
+  // printf("Child sees buf = \"%s\"\n", buf);
+  // strcpy(buf, "hello from child");
+  // printf("Child  = \"%x\"\n", buf);
+  // printf("Child updates buf = \"%s\"\n", buf);
   fstream fs;
 	fs.open("testFile", ios::in);
 
@@ -27,7 +27,7 @@ static int child_func(void* arg) {
 	string content;
 	fs >> content;
 
-	cout << "file content: " << content << endl;
+	// cout << "file content: " << content << endl;
   return 0;
 }
 

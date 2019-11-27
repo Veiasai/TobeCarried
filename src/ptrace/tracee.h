@@ -67,6 +67,7 @@ private:
     void write();
 
     // net
+    void socket();
     void connect();
     void recvfrom();
     void sendto();

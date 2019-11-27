@@ -30,6 +30,26 @@ void Tracer::run(/* args */)
         if(WIFEXITED(status))
             break;
         spdlog::info("[tid: tracer] Thread {} traps", tid);
+        spdlog::info("[tid: tracer] signal: {}", WSTOPSIG(status));
+
+        spdlog::info("[tid: tracer] before status: {}", status);
+
+        if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGTRAP)
+        {
+            //当一个线程创建另一个线程返回时，收到的信号
+            pid_t new_pid;
+            
+            if ((status >> 8) == (SIGTRAP | PTRACE_EVENT_CLONE << 8))
+            {
+                if (ptrace(PTRACE_GETEVENTMSG, tid, 0, &new_pid )
+                        != -1)
+                {
+                    spdlog::debug("thread {} created\n", new_pid);
+
+                }
+
+            }
+        }
 
         if (tracees.find(tid) == tracees.end()) {
             spdlog::info("[tid: tracer] Add Thread {} to tracees", tid);
