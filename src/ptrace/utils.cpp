@@ -31,12 +31,14 @@ int UtilsImpl::readStrFrom(int tid, const char *p, char *buf, size_t s)
     return -1;
 }
 
+// if \0 appears in buf?
 int UtilsImpl::readBytesFrom(int tid, const char *p, char *buf, size_t s)
 {
     size_t count = 0;
     while (s - count > 8)
     {
         *(long *)(buf + count) = this->cp->peekData(tid, (long)p + count);
+        // spdlog::debug("[tid: {}] [readBytesFrom] [{}]", tid, buf+count);
         count += 8;
     }
 
@@ -44,6 +46,7 @@ int UtilsImpl::readBytesFrom(int tid, const char *p, char *buf, size_t s)
     {
         long data = this->cp->peekData(tid, (long)p + count);
         char *bdata = (char *)&data;
+        // spdlog::debug("[tid: {}] [readBytesFrom] [{}]", tid, bdata);
         for (int i = 0; count + i < s; i++)
         {
             buf[count + i] = bdata[i];

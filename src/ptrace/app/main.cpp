@@ -1,4 +1,5 @@
 #include <sys/ptrace.h>
+#include <sys/wait.h>
 #include <iostream>
 #include <memory>
 #include <sys/types.h>
@@ -57,7 +58,11 @@ void startChild(const std::string & target, const std::vector<std::string> & arg
         execv(target.c_str(), command);
         assert(0);
     }
+    wait(NULL);
     spdlog::debug("start child ret: {}", child);
+    long ptraceOption = PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEEXIT;
+	ptrace(PTRACE_SETOPTIONS, child, NULL, ptraceOption);
+    ptrace(PTRACE_SYSCALL, child, NULL, NULL);
 }
 
 int main(int argc,char **argv){

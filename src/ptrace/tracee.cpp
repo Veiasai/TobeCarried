@@ -2,6 +2,7 @@
 #include "spdlog/sinks/basic_file_sink.h"
 #include "tracee.h"
 #include "utils.h"
+#include "errno.h"
 #include <stdexcept>
 #include <algorithm>
 
@@ -30,16 +31,7 @@ void TraceeImpl::trap()
 {  
     // grab syscall id
     long orig_rax = cp->peekUser(this->tid, 8 * ORIG_RAX);
-    spdlog::info("[tid: {}] syscall {}", this->tid, orig_rax);
-
-    if (this->iscalling && orig_rax == lastSyscallID) {
-        // prevent that some syscalls don't return
-        this->iscalling = false;
-    }
-    else if (!this->iscalling) {
-        this->iscalling = true;
-    }
-    this->lastSyscallID = orig_rax;
+    spdlog::info("[tid: {}] syscall {} calling {}", this->tid, orig_rax, this->iscalling);
 
     if (this->iscalling) {
         this->history.emplace_back();
@@ -47,9 +39,8 @@ void TraceeImpl::trap()
     } else {
         cp->getRegs(this->tid, &this->history.back().ret_regs);
     }
-
     // get all reached filenames
-    this->up->getFilenamesByProc(tid,fileset);
+    this->up->getFilenamesByProc(tid, fileset);
 
     switch (orig_rax)
     {
@@ -63,6 +54,8 @@ void TraceeImpl::trap()
             read(); break;
         case SYS_write:
             write(); break;
+        case SYS_socket:
+            socket(); break;
         case SYS_connect:
             connect(); break;
         case SYS_recvfrom:
@@ -72,14 +65,15 @@ void TraceeImpl::trap()
         case SYS_openat:
             // TODO
         default:
+            this->iscalling = !this->iscalling;
             return;
     }
 
     // check
     if (!this->iscalling) {
-        spdlog::debug("[tid: {}] Start Check SYSCALL {}", tid, orig_rax);
+        // spdlog::debug("[tid: {}] Start Check SYSCALL {}", tid, orig_rax);
         std::vector<RuleCheckMsg> cnt = this->rulemgr->check(orig_rax, this->syscallParams);
-        spdlog::debug("[tid: {}] Finish Check SYSCALL {}, checkMsgSize {}", tid, orig_rax, cnt.size());
+        // spdlog::debug("[tid: {}] Finish Check SYSCALL {}, checkMsgSize {}", tid, orig_rax, cnt.size());
         for (auto & checkMsg : cnt){
             //TODO log
             // spdlog::debug("[tid: {}] Report CheckMsg {}", tid, checkMsg);
@@ -89,6 +83,7 @@ void TraceeImpl::trap()
         report->flush();
         this->ruleCheckMsg.emplace_back(std::move(cnt));
     }
+    this->iscalling = !this->iscalling;
 }
 
 // file
@@ -168,9 +163,30 @@ void TraceeImpl::write()
 }
 
 // net
+void TraceeImpl::socket()
+{
+    if (this->iscalling) {
+        const int domain = (int)this->history.back().call_regs.rdi;
+        this->syscallParams.parameters[ParameterIndex::First] = Parameter(nonpointer, 0, NULL, domain);
+
+        const int type = (int)this->history.back().call_regs.rsi;
+        this->syscallParams.parameters[ParameterIndex::Second] = Parameter(nonpointer, 0, NULL, type);
+
+        const int protocol = (int)this->history.back().call_regs.rdx;
+        this->syscallParams.parameters[ParameterIndex::Third] = Parameter(nonpointer, 0, NULL, protocol);
+
+        spdlog::debug("[tid: {}] Socket Call: arg: [{}, {}, {}]", tid, domain, type, protocol);
+    }
+}
+
 void TraceeImpl::connect()
 {
-
+    if (this->iscalling) {
+        const int sockfd = (int)this->history.back().call_regs.rdi;
+        this->syscallParams.parameters[ParameterIndex::First] = Parameter(nonpointer, 0, NULL, sockfd);
+        spdlog::debug("[tid: {}] Connect Call: sockfd: {}", tid, sockfd);
+        
+    }
 }
 void TraceeImpl::recvfrom()
 {
@@ -185,14 +201,13 @@ void TraceeImpl::sendto()
 void TraceeImpl::clone()
 {
     if (this->iscalling) {
-        spdlog::info("SYS_clone call in tid %d", this->tid);
+        spdlog::info("SYS_clone call in tid {}", this->tid);
     } else {
         long rax = this->history.back().ret_regs.rax;
-        if (rax != 0) {
-            // return in parent thread (return value in child thread is 0)
-            cp->attach(rax);
+        if (rax < 0) {
+            spdlog::error("SYS_clone ret less than 0");
         }
-        spdlog::info("SYS_clone call return %lld in tid %d", rax, this->tid);
+        spdlog::info("SYS_clone call ret {} in tid {}", rax, this->tid);
     }
 }
 
