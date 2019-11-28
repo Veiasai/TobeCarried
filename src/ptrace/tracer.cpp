@@ -28,19 +28,19 @@ void Tracer::run(/* args */)
     
     while(1) {
         int tid = wait(&status);
-        if(WIFEXITED(status)) {
+        spdlog::info("------------------------------");
+        if (WIFEXITED(status)) {
             brokenThreads++;
             spdlog::info("[tid: tracer] Thread {} has exited", tid);
-            if (tracees.size() == brokenThreads){
+            if (tracees.size() == brokenThreads) {
                 spdlog::info("[tid: tracer] Finish the analysis");
                 break;
             }
         }
-        spdlog::info("[tid: tracer] Thread {} traps", tid);
-        spdlog::info("[tid: tracer] signal: {}", WSTOPSIG(status));
-        spdlog::info("[tid: tracer] before status: {:x}", status);
+        spdlog::info("[tid: tracer] Thread {} traps with signal {:x}", tid, status);
 
-        if (status >> 16 != 0){
+        if (status >> 16 != 0) {
+            // event happened
             long msg;
             ptrace(PTRACE_GETEVENTMSG, tid, 0, (long) &msg);
             spdlog::info("PTRACE_GETEVENTMSG {}", msg);
