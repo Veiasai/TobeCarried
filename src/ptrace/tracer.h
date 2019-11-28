@@ -17,7 +17,7 @@ private:
     std::shared_ptr<Report> report;
     long brokenThreads;
 public:
-    Tracer(std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report);
+    Tracer(std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report, int rootTracee);
     ~Tracer();
     void run();
 };

@@ -12,10 +12,11 @@ using namespace std;
 namespace SAIL { namespace core {
 
 Tracer::Tracer(std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, 
-    std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report) 
+    std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report, int rootTracee) 
     : up(up), cp(cp), rulemgr(rulemgr), report(report)
 {
     brokenThreads = 0;
+    tracees[rootTracee] = std::make_unique<TraceeImpl>(rootTracee, up, cp, rulemgr, report);
 }
 
 Tracer::~Tracer()
@@ -46,7 +47,8 @@ void Tracer::run(/* args */)
             spdlog::info("PTRACE_GETEVENTMSG {}", msg);
             if ((status >> 8) == (SIGTRAP | PTRACE_EVENT_FORK << 8)) {
                 int newid = static_cast<int>(msg);
-                tracees[newid] = std::make_unique<TraceeImpl>(newid, up, cp, rulemgr, report);
+                if (tracees.find(newid) == tracees.end())
+                    tracees[newid] = std::make_unique<TraceeImpl>(newid, up, cp, rulemgr, report);
                 ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
                 ptrace(PTRACE_SYSCALL, newid, NULL, NULL);
                 continue;
@@ -57,8 +59,12 @@ void Tracer::run(/* args */)
             }
         }
 
+        // parent thread enters into clone -> event detected -> parent thread returns from clone, this order is deterministic
+        // but child thread returning from clone could happen at any time after parent thread enters into clone
+        // so when child thread returning happens before event detected, new tracee will be created here
+        // when child thread returning happend after evnet detected, new tracee will created at event detected time
+        // but even in the former condition, newly cloned thread can still be attached to watch list automatically
         if (tracees.find(tid) == tracees.end()) {
-            spdlog::error("[tid: tracer] unexpected Thread {}", tid);
             tracees[tid] = std::make_unique<TraceeImpl>(tid, up, cp, rulemgr, report);
         }
 

@@ -37,7 +37,7 @@ void initLogger(const std::string & logLevel, const std::string & logFile) {
     }
 }
 
-void startChild(const std::string & target, const std::vector<std::string> & args, const std::string & childLog) {
+int startChild(const std::string & target, const std::vector<std::string> & args, const std::string & childLog) {
     spdlog::debug("start child {}, output path {}", target, childLog);
 
     __pid_t child = fork();
@@ -63,6 +63,7 @@ void startChild(const std::string & target, const std::vector<std::string> & arg
     long ptraceOption = PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEEXIT;
 	ptrace(PTRACE_SETOPTIONS, child, NULL, ptraceOption);
     ptrace(PTRACE_SYSCALL, child, NULL, NULL);
+    return child;
 }
 
 int main(int argc,char **argv){
@@ -80,7 +81,7 @@ int main(int argc,char **argv){
         auto result = options.parse(argc, argv);
 
         initLogger(result["l"].as<std::string>(), result["o"].as<std::string>());
-        startChild(result["f"].as<std::string>(), result["a"].as<std::vector<std::string>>(), result["d"].as<std::string>());
+        int rootTracee = startChild(result["f"].as<std::string>(), result["a"].as<std::vector<std::string>>(), result["d"].as<std::string>());
 
         YAML::Node config = YAML::LoadFile(result["c"].as<std::string>());
 
@@ -89,7 +90,7 @@ int main(int argc,char **argv){
         std::shared_ptr<rule::RuleManager> ymlmgr=std::make_shared<SAIL::rule::YamlRuleManager>(config);
         std::shared_ptr<core::Report> report = std::make_shared<core::ReportImpl>(result["r"].as<std::string>());
         
-        std::unique_ptr<core::Tracer> tracer = std::make_unique<core::Tracer>(up, cp, ymlmgr, report);
+        std::unique_ptr<core::Tracer> tracer = std::make_unique<core::Tracer>(up, cp, ymlmgr, report, rootTracee);
         tracer->run();
     } catch (std::exception & e){
         std::cout << options.help() << std::endl;
