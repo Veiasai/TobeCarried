@@ -30,13 +30,13 @@ void recv_msg(int &sockfd)
 
     // fisrt accept the length of message
     int length = 0;
-    int n = read(sockfd, (char *)&length, sizeof(length));
+    read(sockfd, (char *)&length, sizeof(length));
     cout << "message length: " << length << endl;
 
     // receive message from client
     char buffer[length + 1];
     bzero(buffer, length + 1);
-    n = read(sockfd, buffer, length + 1);
+    read(sockfd, buffer, length + 1);
     cout << "message content: " << buffer << endl;
 }
 
