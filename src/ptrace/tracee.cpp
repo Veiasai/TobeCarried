@@ -151,12 +151,16 @@ void TraceeImpl::write()
         if (r == 0) {
             spdlog::debug("[tid: {}] Write Call: filename: {}", tid, filename);
         }
+        // const char *buf = (char *)this->history.back().call_regs.rsi;
+        // char localBuf[MAX_READ_SIZE];
+        // this->up->readBytesFrom(this->tid, buf, localBuf, MAX_READ_SIZE);
+        // spdlog::debug("[tid: {}] Write Ret: content: {}", tid, localBuf);
     }
     else {
         const int size = this->history.back().ret_regs.rax;
         this->syscallParams.parameters[ParameterIndex::Ret] = Parameter(nonpointer, 0, NULL, size);
         if (size < 0) {
-            spdlog::debug("[tid: {}] Read Ret less than 0", tid);
+            spdlog::debug("[tid: {}] Write Ret less than 0", tid);
             return;
         }
         const char *buf = (char *)this->history.back().call_regs.rsi;
