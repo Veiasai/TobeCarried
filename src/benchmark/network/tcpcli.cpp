@@ -17,101 +17,58 @@ void error(const string &msg)
 
 void send_msg(int &sockfd, const string &message)
 {
-    int n = 0;
     int length = message.length();
-
-    n = write(sockfd, (char *)&length, sizeof(length));
-    if (n < 0)
-    {
-        error("Error: cannot send message length to server!\n");
-    }
-
-    n = write(sockfd, message.c_str(), length);
-    if (n < 0)
-    {
-        error("Error: cannot send message to server!\n");
-    }
+    write(sockfd, (char *)&length, sizeof(length));
+    write(sockfd, message.c_str(), length);
 }
 
 void recv_msg(int &sockfd)
 {
-    int n = 0;
+    // read buffer of 123 is like 3000313233 (03-00-00-00-31-32-33 actually),
+    // first four byte is message length and content follows
+
     // fisrt accept the length of message
     int length = 0;
-    n = read(sockfd, (char *)&length, sizeof(length));
-    if (n == -1 || n != sizeof(length))
-    {
-        error("Read error!");
-    }
-
-    cout << "MSG Length: " << length << endl;
-    if (n < 0)
-    {
-        error("Error: cannot read message length from client!\n");
-    }
+    read(sockfd, (char *)&length, sizeof(length));
+    cout << "message length: " << length << endl;
 
     // receive message from client
-    int buffer_length = length + 1;
-    char *buffer = new char[buffer_length];
-    bzero(buffer, buffer_length);
-    int byte_read = 0;
-    while (byte_read < length)
-    {
-        n = read(sockfd, buffer + byte_read, length - byte_read);
-        if (n == -1 || n != sizeof(length))
-        {
-            error("Read error!");
-        }
-
-        if (n < 0)
-        {
-            error("Error: cannot read message from client!\n");
-        }
-        byte_read += n;
-    }
-
-    cout << "MSG: " << buffer << endl;
+    char buffer[length + 1];
+    bzero(buffer, length + 1);
+    read(sockfd, buffer, length + 1);
+    cout << "message content: " << buffer << endl;
 }
 
 // ./tcpsvr.o <port>
 int main(int argc, char *argv[])
 {
-    int sockfd, portno;
-    struct sockaddr_in serv_addr;
-    struct hostent *server;
-
-    // char buffer[256];
-
-    if (argc < 3)
-    {
+    if (argc < 3) {
         error("Error! Usage: cmd hostname port\n");
     }
 
-    portno = atoi(argv[2]);
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0)
-    {
+    int port = atoi(argv[2]);
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) {
         error("Error: cannot open socket!\n");
     }
 
-    server = gethostbyname(argv[1]);
-    if (server == NULL)
-    {
+    struct hostent *server = gethostbyname(argv[1]);
+    if (!server) {
         error("Error: cannot find the server!");
     }
 
+    struct sockaddr_in serv_addr;
     bzero((char *)&serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
-    serv_addr.sin_port = htons(portno);
-    if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-    {
+    serv_addr.sin_port = htons(port);
+    if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
         error("Error: cannot connect to server!\n");
     }
 
     cout << "Please enter the message: \n";
-    string message = "";
-    getline(cin, message);
+    string message = "hello, world!";
+    // getline(cin, message);
 
     // send message
     cout << "sending message...\n";

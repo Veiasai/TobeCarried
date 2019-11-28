@@ -31,7 +31,7 @@ void TraceeImpl::trap()
 {  
     // grab syscall id
     long orig_rax = cp->peekUser(this->tid, 8 * ORIG_RAX);
-    spdlog::info("[tid: {}] syscall {} calling {}", this->tid, orig_rax, this->iscalling);
+    spdlog::info("[tid: {}] syscall {} calling {}", this->tid, orig_rax, this->iscalling ? "in" : "out");
 
     if (this->iscalling) {
         this->history.emplace_back();
@@ -124,12 +124,16 @@ void TraceeImpl::read()
     }
     else {
         // rax can be -1, but std::min required two args with the same type
-        const size_t size = this->history.back().ret_regs.rax;
+        const int size = this->history.back().ret_regs.rax;
         this->syscallParams.parameters[ParameterIndex::Ret] = Parameter(nonpointer, 0, NULL, size);
-        
+        if (size < 0) {
+            spdlog::debug("[tid: {}] Read Ret less than 0", tid);
+            return;
+        }
         const char *buf = (char *)this->history.back().call_regs.rsi;
         char localBuf[MAX_READ_SIZE];
-        this->up->readBytesFrom(this->tid, buf, localBuf, std::min(size, MAX_READ_SIZE) - 1);
+        spdlog::debug("[tid: {}] Read Ret: size: {}", tid, size);
+        this->up->readBytesFrom(this->tid, buf, localBuf, std::min(size, MAX_READ_SIZE));
         this->syscallParams.parameters[ParameterIndex::Second] = Parameter(pointer, size, localBuf, 0);
 
         spdlog::debug("[tid: {}] Read Ret: content: {}", tid, localBuf);
@@ -147,14 +151,22 @@ void TraceeImpl::write()
         if (r == 0) {
             spdlog::debug("[tid: {}] Write Call: filename: {}", tid, filename);
         }
+        // const char *buf = (char *)this->history.back().call_regs.rsi;
+        // char localBuf[MAX_READ_SIZE];
+        // this->up->readBytesFrom(this->tid, buf, localBuf, MAX_READ_SIZE);
+        // spdlog::debug("[tid: {}] Write Ret: content: {}", tid, localBuf);
     }
     else {
-        const size_t size = this->history.back().ret_regs.rax;
+        const int size = this->history.back().ret_regs.rax;
         this->syscallParams.parameters[ParameterIndex::Ret] = Parameter(nonpointer, 0, NULL, size);
-
+        if (size < 0) {
+            spdlog::debug("[tid: {}] Write Ret less than 0", tid);
+            return;
+        }
         const char *buf = (char *)this->history.back().call_regs.rsi;
         char localBuf[MAX_READ_SIZE];
-        this->up->readBytesFrom(this->tid, buf, localBuf, std::min(size, MAX_READ_SIZE) - 1);
+        spdlog::debug("[tid: {}] Write Ret: size: {}", tid, size);
+        this->up->readBytesFrom(this->tid, buf, localBuf, std::min(size, MAX_READ_SIZE));
         this->syscallParams.parameters[ParameterIndex::Second] = Parameter(pointer, size, localBuf, 0);
 
         spdlog::debug("[tid: {}] Write Ret: content: {}", tid, localBuf);
