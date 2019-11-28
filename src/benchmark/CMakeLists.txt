@@ -22,6 +22,9 @@ ADD_EXECUTABLE(tcpcli network/tcpcli.cpp)
 #   network tcpsvr
 #   ./tcpsvr <port>
 ADD_EXECUTABLE(tcpsvr network/tcpsvr.cpp)
+#   network netlink
+#   ./netlink
+ADD_EXECUTABLE(netlink network/netlink.cpp)
 
 #   clone
 #   clone
