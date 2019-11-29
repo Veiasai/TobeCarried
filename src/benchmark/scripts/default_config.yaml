@@ -1,11 +1,14 @@
-- sysnum: 11
-  id: 1
-  name: hello
-  level: 2
-  specs:
-    - paraIndex: 1
-      action: matchRe
-      value: hello_value
-    - paraIndex: 2
-      action: matchBytes
-      value: [0x6d, 0x77]
+whitelist:
+
+blacklist:
+  - sysnum: 11
+    id: 1
+    name: hello
+    level: 2
+    specs:
+      - paraIndex: 1
+        action: matchRe
+        value: hello_value
+      - paraIndex: 2
+        action: matchBytes
+        value: [0x6d, 0x77]

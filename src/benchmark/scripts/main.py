@@ -1,27 +1,39 @@
 import os
 
-def test(file, args, configFile, loglevel="Info"):
-    os.system("ptrace -l %s -f %s -c %s -a=%s" % (loglevel, file, configFile, args))
+def test(file, args, configFile, loglevel="info"):
+    cmd = """./ptrace -l %s -f %s -c %s -o logs/log.txt -r report -d childlog --args=%s""" % (loglevel, file, configFile, args)
+    print(cmd)
+    ret = os.system(cmd)
+    print(ret)
 
 def testOpenKey():
-    file = "openKey"
+    file = "openkey"
     args = "testFile"
-    configFile = ""
+    f = open(args, "w")
+    f.close()
+    configFile = "default_config.yaml"
     test(file, args, configFile)
 
 def testReadKey():
-    file = "readKey"
+    file = "readkey"
     args = "testFile"
-    configFile = ""
+    configFile = "default_config.yaml"
     test(file, args, configFile)
 
 def testWriteKey():
-    file = "writeKey"
+    file = "writekey"
     args = "testFile"
-    configFile = ""
+    configFile = "default_config.yaml"
+    test(file, args, configFile)
+
+def testNetLink():
+    file = "netlink"
+    args = ""
+    configFile = "default_config.yaml"
     test(file, args, configFile)
 
 if __name__ == "__main__":
     testOpenKey()
+    testNetLink()
     testReadKey()
     testWriteKey()

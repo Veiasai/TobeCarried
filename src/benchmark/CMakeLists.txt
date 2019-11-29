@@ -1,6 +1,9 @@
-PROJECT(ptrace)
+PROJECT(benchmark)
 
-configure_file(scripts/main.py scripts/main.py)
+configure_file(scripts/main.py main.py)
+configure_file(scripts/default_config.yaml default_config.yaml)
+configure_file(scripts/whitelist.yml whitelist.yml)
+
 #   file
 #   file open
 #   ./openkey.o filename

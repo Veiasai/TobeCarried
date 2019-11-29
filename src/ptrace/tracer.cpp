@@ -72,16 +72,32 @@ void Tracer::run(/* args */)
             if (WSTOPSIG(status) == SIGTRAP)
             {
                 tracees[tid]->trap();
+                ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
             }
             else if (WSTOPSIG(status) == SIGSTOP)
             {
-                spdlog::info("[tid: tracer] status == SIGSTOP");
+                // wake up process
+                ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
+            }
+            else if (WSTOPSIG(status) == SIGSEGV)
+            {
+                brokenThreads++;
+            }
+            else if (WSTOPSIG(status) == SIGABRT)
+            {
+                brokenThreads++;
+            }
+            else
+            {
+                assert(0);
             }
             
-            // wake up child process
-            ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
         } catch(exception & e){
             spdlog::error("[tid: tracer] Thread {} has been broken. Msg: {}", tid, e.what());
+        }
+        if (tracees.size() == brokenThreads) {
+            spdlog::info("[tid: tracer] Finish the analysis");
+            break;
         }
     }
 
