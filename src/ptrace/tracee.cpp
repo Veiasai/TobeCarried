@@ -5,6 +5,7 @@
 #include "errno.h"
 #include <stdexcept>
 #include <algorithm>
+#include "syscall_assist.h"
 
 namespace {
 #include <sys/ptrace.h>
@@ -31,7 +32,9 @@ void TraceeImpl::trap()
 {  
     // grab syscall id
     long orig_rax = cp->peekUser(this->tid, 8 * ORIG_RAX);
-    spdlog::info("[tid: {}] syscall {} calling {}", this->tid, orig_rax, this->iscalling ? "in" : "out");
+    // syscall number to name
+    std::string syscallName= SAIL::SYSCALL::syscall_assist.at(orig_rax);
+    spdlog::info("[tid: {}] [syscall: {}] calling {}", this->tid, syscallName, this->iscalling ? "in" : "out");
 
     if (this->iscalling) {
         this->history.emplace_back();
