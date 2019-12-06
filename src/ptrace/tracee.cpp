@@ -18,8 +18,8 @@ namespace {
 namespace SAIL { namespace core {
 
 TraceeImpl::TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, 
-    std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report) 
-    : tid(tid), up(up), cp(cp), rulemgr(rulemgr), report(report)
+    std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report, std::shared_ptr<Whitelist> whitelist) 
+    : tid(tid), up(up), cp(cp), rulemgr(rulemgr), report(report), whitelist(whitelist)
 {
     this->iscalling = true;
     this->callID = 0;
@@ -243,7 +243,6 @@ void TraceeImpl::end()
     this->up->strset2file(outfilename, this->fileset);
 
     // whitelist
-    whitelist = std::make_shared<WhitelistImpl>("whitelist.yml");
     std::set<std::string> whitelist_result = whitelist->Check(fileset);
     std::string outfilename2="./logs/"+std::to_string(this->tid)+"_reached_files_report.txt";
     this->up->strset2file(outfilename2, whitelist_result);

@@ -74,6 +74,7 @@ int main(int argc,char **argv){
     ("f,file", "the file you want to check", cxxopts::value<std::string>())
     ("d,childlog", "target output file path", cxxopts::value<std::string>())
     ("c,config", "config file path", cxxopts::value<std::string>())
+    ("w,whitelist", "config whitelist file path", cxxopts::value<std::string>())
     ("a,args", "pass args to child, format like --a=a1,a2,a3", cxxopts::value<std::vector<std::string>>())
     ("r,report", "report file path", cxxopts::value<std::string>())
     ;
@@ -85,12 +86,14 @@ int main(int argc,char **argv){
 
         YAML::Node config = YAML::LoadFile(result["c"].as<std::string>());
 
+        std::shared_ptr<core::Whitelist> whitelist_config = std::make_shared<core::WhitelistImpl>(result["w"].as<std::string>());
+
         std::shared_ptr<utils::CustomPtrace> cp = std::make_shared<utils::CustomPtraceImpl>();
         std::shared_ptr<utils::Utils> up = std::make_shared<utils::UtilsImpl>(cp);
         std::shared_ptr<rule::RuleManager> ymlmgr=std::make_shared<SAIL::rule::YamlRuleManager>(config);
         std::shared_ptr<core::Report> report = std::make_shared<core::ReportImpl>(result["r"].as<std::string>());
         
-        std::unique_ptr<core::Tracer> tracer = std::make_unique<core::Tracer>(up, cp, ymlmgr, report, rootTracee);
+        std::unique_ptr<core::Tracer> tracer = std::make_unique<core::Tracer>(up, cp, ymlmgr, report, whitelist_config, rootTracee);
         tracer->run();
     } catch (std::exception & e){
         std::cout << options.help() << std::endl;
