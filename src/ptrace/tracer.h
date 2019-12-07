@@ -15,9 +15,11 @@ private:
     std::shared_ptr<utils::CustomPtrace> cp;
     std::shared_ptr<rule::RuleManager> rulemgr;
     std::shared_ptr<Report> report;
+    // for whitelist
+    std::shared_ptr<Whitelist> whitelist;
     long brokenThreads;
 public:
-    Tracer(std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report, int rootTracee);
+    Tracer(std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report, std::shared_ptr<Whitelist> whitelist, int rootTracee);
     ~Tracer();
     void run();
 };

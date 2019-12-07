@@ -67,6 +67,7 @@ private:
 
     // file
     void open();
+    void openat();
     void read();
     void write();
 
@@ -75,11 +76,12 @@ private:
     void connect();
     void recvfrom();
     void sendto();
+    void ioctl();
 
     // clone
     void clone();
 public:
-    TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report);
+    TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report,std::shared_ptr<Whitelist> whitelist);
     virtual ~TraceeImpl() {};
     virtual void trap() override;
     virtual const std::vector<Systemcall> & getHistory() override;

@@ -12,11 +12,11 @@ using namespace std;
 namespace SAIL { namespace core {
 
 Tracer::Tracer(std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, 
-    std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report, int rootTracee) 
-    : up(up), cp(cp), rulemgr(rulemgr), report(report)
+    std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report, std::shared_ptr<Whitelist> whitelist, int rootTracee) 
+    : up(up), cp(cp), rulemgr(rulemgr), report(report), whitelist(whitelist)
 {
     brokenThreads = 0;
-    tracees[rootTracee] = std::make_unique<TraceeImpl>(rootTracee, up, cp, rulemgr, report);
+    tracees[rootTracee] = std::make_unique<TraceeImpl>(rootTracee, up, cp, rulemgr, report, whitelist);
 }
 
 Tracer::~Tracer()
@@ -48,7 +48,7 @@ void Tracer::run(/* args */)
             if ((status >> 8) == (SIGTRAP | PTRACE_EVENT_FORK << 8)) {
                 int newid = static_cast<int>(msg);
                 if (tracees.find(newid) == tracees.end())
-                    tracees[newid] = std::make_unique<TraceeImpl>(newid, up, cp, rulemgr, report);
+                    tracees[newid] = std::make_unique<TraceeImpl>(newid, up, cp, rulemgr, report, whitelist);
                 ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
                 ptrace(PTRACE_SYSCALL, newid, NULL, NULL);
                 continue;
@@ -65,7 +65,7 @@ void Tracer::run(/* args */)
         // when child thread returning happend after evnet detected, new tracee will created at event detected time
         // but even in the former condition, newly cloned thread can still be attached to watch list automatically
         if (tracees.find(tid) == tracees.end()) {
-            tracees[tid] = std::make_unique<TraceeImpl>(tid, up, cp, rulemgr, report);
+            tracees[tid] = std::make_unique<TraceeImpl>(tid, up, cp, rulemgr, report, whitelist);
         }
 
         try {
