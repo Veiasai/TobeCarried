@@ -67,6 +67,7 @@ private:
 
     // file
     void open();
+    void openat();
     void read();
     void write();
 
@@ -75,6 +76,7 @@ private:
     void connect();
     void recvfrom();
     void sendto();
+    void ioctl();
 
     // clone
     void clone();
