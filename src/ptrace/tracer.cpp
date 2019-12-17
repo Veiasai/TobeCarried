@@ -37,6 +37,7 @@ void Tracer::run(/* args */)
                 spdlog::info("[tid: tracer] Finish the analysis");
                 break;
             }
+            continue;
         }
         spdlog::info("[tid: tracer] Thread {} traps with signal {:x}", tid, status);
 
@@ -78,7 +79,7 @@ void Tracer::run(/* args */)
                 tracees[tid]->trap();
                 ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
             }
-            else if (WSTOPSIG(status) == SIGSTOP)
+            else if (WSTOPSIG(status) == SIGSTOP || WSTOPSIG(status) == SIGCHLD || WSTOPSIG(status) == SIGCONT)
             {
                 // wake up process
                 ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
