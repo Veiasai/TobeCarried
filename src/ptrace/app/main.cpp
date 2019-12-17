@@ -55,13 +55,24 @@ int startChild(const std::string & target, const std::vector<std::string> & args
         dup2(childLogFd, 1);
         dup2(childLogFd, 2);
         ptrace(PTRACE_TRACEME, 0, NULL, NULL);
+        kill(getpid(), SIGSTOP);
         execv(target.c_str(), command);
         assert(0);
     }
-    wait(NULL);
+    int status;
+    while (waitpid(child, &status, WSTOPPED) < 0) {
+        if (errno == EINTR)
+            continue;
+    }
+    if (!WIFSTOPPED(status) || WSTOPSIG(status) != SIGSTOP) {
+        kill(child, SIGKILL);
+        assert(0);
+    }
     spdlog::debug("start child ret: {}", child);
-    long ptraceOption = PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEEXIT;
+
+    long ptraceOption = PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEEXIT | PTRACE_O_TRACEVFORK | PTRACE_O_TRACEEXEC;
 	ptrace(PTRACE_SETOPTIONS, child, NULL, ptraceOption);
+    kill(child, SIGCONT);
     ptrace(PTRACE_SYSCALL, child, NULL, NULL);
     return child;
 }
@@ -83,7 +94,7 @@ int main(int argc,char **argv){
 
         initLogger(result["l"].as<std::string>(), result["o"].as<std::string>());
         int rootTracee = startChild(result["f"].as<std::string>(), result["a"].as<std::vector<std::string>>(), result["d"].as<std::string>());
-
+    
         YAML::Node config = YAML::LoadFile(result["c"].as<std::string>());
 
         std::shared_ptr<core::Whitelist> whitelist_config = std::make_shared<core::WhitelistImpl>(result["w"].as<std::string>());

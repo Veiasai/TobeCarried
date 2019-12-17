@@ -33,3 +33,13 @@ ADD_EXECUTABLE(netlink network/netlink.cpp)
 #   clone
 #   ./clone
 ADD_EXECUTABLE(clone clone/clone.cpp)
+
+#   execve_uname
+#   execve_uname
+#   ./execve_uname
+ADD_EXECUTABLE(execve_uname execve_uname/execve_uname.cpp)
+
+#   ioctl
+#   ioctl
+#   ./ioctl ens3(or other ip addrname)
+ADD_EXECUTABLE(ioctl ioctl/ioctl.cpp)

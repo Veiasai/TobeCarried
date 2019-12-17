@@ -37,6 +37,7 @@ void Tracer::run(/* args */)
                 spdlog::info("[tid: tracer] Finish the analysis");
                 break;
             }
+            continue;
         }
         spdlog::info("[tid: tracer] Thread {} traps with signal {:x}", tid, status);
 
@@ -57,6 +58,10 @@ void Tracer::run(/* args */)
                 ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
                 continue;
             }
+            else if ((status >> 8) == (SIGTRAP | (PTRACE_EVENT_EXEC << 8))) {
+                ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
+                continue;
+            }
         }
 
         // parent thread enters into clone -> event detected -> parent thread returns from clone, this order is deterministic
@@ -74,7 +79,7 @@ void Tracer::run(/* args */)
                 tracees[tid]->trap();
                 ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
             }
-            else if (WSTOPSIG(status) == SIGSTOP)
+            else if (WSTOPSIG(status) == SIGSTOP || WSTOPSIG(status) == SIGCHLD || WSTOPSIG(status) == SIGCONT)
             {
                 // wake up process
                 ptrace(PTRACE_SYSCALL, tid, NULL, NULL);

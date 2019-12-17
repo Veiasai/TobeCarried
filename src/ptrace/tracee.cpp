@@ -15,6 +15,7 @@ namespace
 #include <sys/reg.h>
 #include <sys/user.h>
 #include <sys/ioctl.h>
+#include <sys/utsname.h>
 } // namespace
 
 namespace SAIL
@@ -88,6 +89,12 @@ void TraceeImpl::trap()
     case SYS_ioctl:
         ioctl();
         break;
+    case SYS_execve:
+        sysExecve();
+        break;
+    case SYS_uname:
+        uname();
+        break;
     default:
         this->iscalling = !this->iscalling;
         return;
@@ -110,6 +117,75 @@ void TraceeImpl::trap()
         this->ruleCheckMsg.emplace_back(std::move(cnt));
     }
     this->iscalling = !this->iscalling;
+}
+
+// uname
+void TraceeImpl::uname()
+{
+    // int uname(struct utsname *buf);
+    // int execve(const char *filename, char *const argv[], char *const envp[]);
+    if (this->iscalling)
+    {
+    }
+    else
+    {
+        struct utsname *paras = (struct utsname *)(this->history.back().call_regs.rdi);
+        char p[MAX_FILENAME_SIZE];
+
+        struct utsname para;
+
+        this->up->readBytesFrom(this->tid, (char *)(paras), (char *)&para, sizeof(utsname));
+        std::string sysname = para.sysname;
+        std::string nodename = para.nodename;
+
+        std::string a = "{sysname:" + sysname + " nodename: " + nodename + "...}";
+        char *para1 = (char *)(a.c_str());
+
+        this->syscallParams.parameters[ParameterIndex::First] = Parameter(pointer, MAX_FILENAME_SIZE, para1, 0);
+        spdlog::debug("[tid: {}] uname: utsname: {}", tid, a);
+    }
+}
+// execve
+void TraceeImpl::sysExecve()
+{
+    // int execve(const char *filename, char *const argv[], char *const envp[]);
+    if (this->iscalling)
+    {
+        const char *filename = (char *)this->history.back().call_regs.rdi;
+        assert(filename);
+
+        this->up->readStrFrom(this->tid, filename, this->localFilename, MAX_FILENAME_SIZE);
+        this->syscallParams.parameters[ParameterIndex::First] = Parameter(pointer, MAX_FILENAME_SIZE, this->localFilename, 0);
+        spdlog::debug("[tid: {}] execve: filename: {}", tid, this->localFilename);
+
+        char **paras = (char **)(this->history.back().call_regs.rsi);
+        char p[MAX_FILENAME_SIZE];
+        int i = 0;
+        std::string argvs = "";
+        for (;;)
+        {
+            long para;
+            this->up->readBytesFrom(this->tid, (char *)(paras + i), (char *)&para, 8);
+            if (para == 0)
+            {
+                break;
+            }
+            this->up->readStrFrom(this->tid, (char *)para, p, MAX_FILENAME_SIZE);
+
+            argvs = argvs + " " + std::string(p);
+            i++;
+            if (i > 20)
+                break;
+        }
+
+        char *passargvs = (char *)argvs.data();
+
+        this->syscallParams.parameters[ParameterIndex::Second] = Parameter(pointer, MAX_FILENAME_SIZE, passargvs, 0);
+        spdlog::debug("[tid: {}] execve: argv: {}", tid, passargvs);
+    }
+    else
+    {
+    }
 }
 
 // file
@@ -151,14 +227,14 @@ void TraceeImpl::openat()
     if (this->iscalling)
     {
         const int dirfd = (int)this->history.back().call_regs.rdi;
-        this->syscallParams.parameters[ParameterIndex::Second] = Parameter(nonpointer, 0, NULL, dirfd);
+        this->syscallParams.parameters[ParameterIndex::First] = Parameter(nonpointer, 0, NULL, dirfd);
 
         const char *pathname = (char *)this->history.back().call_regs.rsi;
         this->up->readStrFrom(this->tid, pathname, this->localFilename, MAX_FILENAME_SIZE);
         this->syscallParams.parameters[ParameterIndex::Second] = Parameter(pointer, MAX_FILENAME_SIZE, this->localFilename, 0);
 
         const int flags = (int)this->history.back().call_regs.rdx;
-        this->syscallParams.parameters[ParameterIndex::Second] = Parameter(nonpointer, 0, NULL, flags);
+        this->syscallParams.parameters[ParameterIndex::Third] = Parameter(nonpointer, 0, NULL, flags);
         spdlog::debug("[tid: {}] Openat: dirfd: {}  filename: {}", tid, dirfd, this->localFilename);
     }
     else

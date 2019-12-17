@@ -80,6 +80,12 @@ private:
 
     // clone
     void clone();
+
+    // execve
+    void sysExecve();
+
+    // uname
+    void uname();
 public:
     TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report,std::shared_ptr<Whitelist> whitelist);
     virtual ~TraceeImpl() {};
