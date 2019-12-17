@@ -57,6 +57,10 @@ void Tracer::run(/* args */)
                 ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
                 continue;
             }
+            else if ((status >> 8) == (SIGTRAP | (PTRACE_EVENT_EXEC << 8))) {
+                ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
+                continue;
+            }
         }
 
         // parent thread enters into clone -> event detected -> parent thread returns from clone, this order is deterministic
