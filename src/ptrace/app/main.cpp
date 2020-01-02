@@ -9,6 +9,9 @@
 #include <cxxopts.hpp>
 #include <exception>
 #include <stdexcept>
+#include <signal.h>
+#include <linux/unistd.h>
+#include <syscall.h>
 
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/basic_file_sink.h"
@@ -77,6 +80,14 @@ int startChild(const std::string & target, const std::vector<std::string> & args
     return child;
 }
 
+static std::unique_ptr<core::Tracer> tracer = NULL;
+void INThandler(int sig)
+{
+    signal(SIGINT, SIG_IGN);
+    tracer->end();
+    // exit(2);
+}
+
 int main(int argc,char **argv){
     cxxopts::Options options("ToBeCarried", "Trace the systemcall used by a process.");
     options.add_options()
@@ -94,7 +105,7 @@ int main(int argc,char **argv){
 
         initLogger(result["l"].as<std::string>(), result["o"].as<std::string>());
         int rootTracee = startChild(result["f"].as<std::string>(), result["a"].as<std::vector<std::string>>(), result["d"].as<std::string>());
-    
+
         YAML::Node config = YAML::LoadFile(result["c"].as<std::string>());
 
         std::shared_ptr<core::Whitelist> whitelist_config = std::make_shared<core::WhitelistImpl>(result["w"].as<std::string>());
@@ -104,8 +115,12 @@ int main(int argc,char **argv){
         std::shared_ptr<rule::RuleManager> ymlmgr=std::make_shared<SAIL::rule::YamlRuleManager>(config);
         std::shared_ptr<core::Report> report = std::make_shared<core::ReportImpl>(result["r"].as<std::string>());
         
-        std::unique_ptr<core::Tracer> tracer = std::make_unique<core::Tracer>(up, cp, ymlmgr, report, whitelist_config, rootTracee);
+        tracer = std::make_unique<core::Tracer>(up, cp, ymlmgr, report, whitelist_config, rootTracee);
+        signal(SIGINT, INThandler);
         tracer->run();
+
+        // Exit
+        kill(rootTracee, SIGKILL);
     } catch (std::exception & e){
         std::cout << options.help() << std::endl;
         std::cout << e.what() << std::endl;
