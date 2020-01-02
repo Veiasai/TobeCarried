@@ -43,7 +43,7 @@ void Tracer::run()
     {
         if (interrupt)
         {
-            spdlog::info("[tid: tracer] Received CTAL+C, Exit");
+            spdlog::info("[tid: tracer] Received CTRL+C, Exit");
             break;
         }
         if (tracees.size() == brokenThreads)

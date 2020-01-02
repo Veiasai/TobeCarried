@@ -360,13 +360,13 @@ void TraceeImpl::socket()
 {
     if (this->iscalling)
     {
-        const int domain = (int)this->history.back().call_regs.rdi;
+        const unsigned long domain = this->history.back().call_regs.rdi;
         this->syscallParams.parameters[ParameterIndex::First] = Parameter(nonpointer, 0, NULL, domain);
 
-        const int type = (int)this->history.back().call_regs.rsi;
+        const unsigned long type = this->history.back().call_regs.rsi;
         this->syscallParams.parameters[ParameterIndex::Second] = Parameter(nonpointer, 0, NULL, type);
 
-        const int protocol = (int)this->history.back().call_regs.rdx;
+        const unsigned long protocol = this->history.back().call_regs.rdx;
         this->syscallParams.parameters[ParameterIndex::Third] = Parameter(nonpointer, 0, NULL, protocol);
 
         spdlog::debug("[tid: {}] Socket Call: arg: [{}, {}, {}]", tid, domain, type, protocol);
@@ -377,9 +377,17 @@ void TraceeImpl::connect()
 {
     if (this->iscalling)
     {
-        const int sockfd = (int)this->history.back().call_regs.rdi;
+        const unsigned long sockfd = this->history.back().call_regs.rdi;
         this->syscallParams.parameters[ParameterIndex::First] = Parameter(nonpointer, 0, NULL, sockfd);
-        spdlog::debug("[tid: {}] Connect Call: sockfd: {}", tid, sockfd);
+
+        const unsigned long sockaddr = this->history.back().call_regs.rsi;
+        const unsigned long addrlen = this->history.back().call_regs.rdx;
+        char * fp = new char[addrlen];
+        this->up->readBytesFrom(this->tid, reinterpret_cast<char *>(sockaddr), fp, addrlen);
+        this->syscallParams.parameters[ParameterIndex::Second] = Parameter(pointer, addrlen, fp, sockaddr);
+        this->syscallParams.parameters[ParameterIndex::Third] = Parameter(nonpointer, 0, NULL, addrlen);
+
+        spdlog::debug("[tid: {}] Connect Call: arg: [{}, {}, {}]", tid, sockfd, sockaddr, addrlen);
     }
 }
 void TraceeImpl::recvfrom()
