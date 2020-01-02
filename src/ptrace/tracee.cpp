@@ -419,6 +419,7 @@ const std::vector<std::vector<RuleCheckMsg>> &TraceeImpl::getRuleCheckMsg()
 
 void TraceeImpl::end()
 {
+    spdlog::info("Tracee {} invoked end", this->tid);
     // output(refresh) fileset to files.txt
     std::string outfilename = "./logs/" + std::to_string(this->tid) + "_reached_files.txt";
     this->up->strset2file(outfilename, this->fileset);
@@ -427,6 +428,9 @@ void TraceeImpl::end()
     std::set<std::string> whitelist_result = whitelist->Check(fileset);
     std::string outfilename2 = "./logs/" + std::to_string(this->tid) + "_reached_files_report.txt";
     this->up->strset2file(outfilename2, whitelist_result);
+
+    
+    spdlog::info("Tracee {} finished end", this->tid);
 }
 
 } // namespace core
