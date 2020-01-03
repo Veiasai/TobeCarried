@@ -6,7 +6,7 @@
 #include <memory>
 
 #include "rule.h"
-
+#include "rulePlugin.h"
 
 namespace SAIL { namespace rule {
 
@@ -21,12 +21,14 @@ class YamlRuleManager : public RuleManager
 {
 private:
     // map from syscall number to rules applied
-    std::map<int, std::vector<std::unique_ptr<Rule>>> whitelist_rules;
-    std::map<int, std::vector<std::unique_ptr<Rule>>> blacklist_rules;
+    std::map<int, std::vector<std::unique_ptr<Rule>>> rules;
+    std::map<std::string, std::unique_ptr<RulePlugin>> plugins;
+
+    void ruleInit(const YAML::Node & yaml);
+    void pluginInit(const YAML::Node & yaml);
 public:
     YamlRuleManager(const YAML::Node & yaml);
     virtual ~YamlRuleManager() {};
-    int ruleMatch(const YAML::Node & yaml,std::map<int, std::vector<std::unique_ptr<Rule>>> &rules);
     virtual std::vector<core::RuleCheckMsg> check(int syscall, const core::SyscallParameter & sp) override;
 };
 

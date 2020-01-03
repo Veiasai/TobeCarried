@@ -210,7 +210,7 @@ void TraceeImpl::open()
     }
     else
     {
-        const unsigned long long int fd = this->history.back().ret_regs.rax;
+        const unsigned long long fd = this->history.back().ret_regs.rax;
         this->syscallParams.parameters[ParameterIndex::Ret] = Parameter(nonpointer, 0, NULL, fd);
     }
 }

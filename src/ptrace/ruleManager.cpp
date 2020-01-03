@@ -9,14 +9,14 @@ namespace rule
 
 YamlRuleManager::YamlRuleManager(const YAML::Node &yaml)
 {
-    const YAML::Node whitelist = yaml["whitelist"];
-    const YAML::Node blacklist = yaml["blacklist"];
+    const YAML::Node rules = yaml["rules"];
+    const YAML::Node plugins = yaml["plugins"];
 
-    ruleMatch(whitelist, this->whitelist_rules);
-    ruleMatch(blacklist, this->blacklist_rules);
+    ruleInit(rules);
+    pluginInit(plugins);
 };
 
-int YamlRuleManager::ruleMatch(const YAML::Node &yaml, std::map<int, std::vector<std::unique_ptr<Rule>>> &rules)
+void YamlRuleManager::ruleInit(const YAML::Node &yaml)
 {
     for (auto ruleNode = yaml.begin(); ruleNode != yaml.end(); ruleNode++)
     {
@@ -68,14 +68,22 @@ int YamlRuleManager::ruleMatch(const YAML::Node &yaml, std::map<int, std::vector
     }
 }
 
+void YamlRuleManager::pluginInit(const YAML::Node &yaml)
+{
+    // TODO
+}
+
 std::vector<core::RuleCheckMsg> YamlRuleManager::check(int syscall, const core::SyscallParameter &sp)
 {
     std::vector<core::RuleCheckMsg> res;
-    for (auto &rule : whitelist_rules[syscall])
+    for (auto &rule : rules[syscall])
         res.push_back(rule->check(sp));
 
-    for (auto &rule : blacklist_rules[syscall])
-        res.push_back(rule->check(sp));
+    for (auto &plugin: plugins)
+    {
+        std::vector<core::RuleCheckMsg> pluginRes = plugin.second->check(syscall, sp);
+        res.insert(res.end(), pluginRes.begin(), pluginRes.end());
+    }
 
     return res;
 };

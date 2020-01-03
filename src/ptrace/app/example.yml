@@ -1,6 +1,4 @@
-whitelist:
-
-blacklist:
+rules:
   - sysnum: 2
     id: 1
     name: hello
@@ -9,3 +7,4 @@ blacklist:
       - paraIndex: 1
         action: matchRe
         value: testFile
+
