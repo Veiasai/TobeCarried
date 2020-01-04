@@ -1,18 +1,15 @@
 #include "whitelist.h"
 #include "spdlog/spdlog.h"
-#include <yaml-cpp/yaml.h>
 
 namespace SAIL
 {
-namespace core
+namespace rule
 {
 
-WhitelistImpl::WhitelistImpl(const std::string &fname)
+FileWhitelist::FileWhitelist(const YAML::Node & config)
 {
-    this->filename = fname;
-    YAML::Node whitelist_config = YAML::LoadFile(filename);
 
-    std::vector<std::string> whitelist = whitelist_config["whitelist"].as<std::vector<std::string>>();
+    std::vector<std::string> whitelist = config.as<std::vector<std::string>>();
 
     for (auto rule : whitelist)
     {
@@ -22,7 +19,26 @@ WhitelistImpl::WhitelistImpl(const std::string &fname)
     }
 }
 
-std::set<std::string> WhitelistImpl::Check(const std::set<std::string> &files)
+void FileWhitelist::beforeTrap(long tid, 
+        const core::Histories & history, 
+        core::RuleCheckMsgs & ruleCheckMsgs)
+{
+    
+}
+
+void FileWhitelist::afterTrap(long tid, 
+        const core::Histories & history, 
+        core::RuleCheckMsgs & ruleCheckMsgs)
+{
+
+}
+
+void FileWhitelist::event(long tid, int status)
+{
+
+}
+
+void FileWhitelist::end()
 {
     std::set<std::string> result;
 
@@ -45,9 +61,8 @@ std::set<std::string> WhitelistImpl::Check(const std::set<std::string> &files)
         else
             result.insert("[Fail] " + (*it));
     }
-
-    return result;
 }
+
 
 } // namespace core
 } // namespace SAIL

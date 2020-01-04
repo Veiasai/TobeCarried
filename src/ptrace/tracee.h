@@ -39,11 +39,6 @@ private:
     std::shared_ptr<rule::RuleManager> rulemgr;
     std::shared_ptr<Report> report;
 
-    // for files tracee has been reached
-    std::set<std::string> fileset;
-    // for whitelist
-    std::shared_ptr<Whitelist> whitelist;
-
     // for buffering filename to insert into fdToFilename
     char localFilename[MAX_FILENAME_SIZE];
     // for buffering syscall id to check whether syscall returns
@@ -72,7 +67,10 @@ private:
     // uname
     void uname();
 public:
-    TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report,std::shared_ptr<Whitelist> whitelist);
+    TraceeImpl(int tid, std::shared_ptr<utils::Utils> up,
+        std::shared_ptr<utils::CustomPtrace> cp,
+        std::shared_ptr<rule::RuleManager> rulemgr,
+        std::shared_ptr<Report> report);
     virtual ~TraceeImpl() {};
     virtual void trap() override;
     virtual const Histories & getHistory() override;

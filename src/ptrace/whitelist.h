@@ -4,29 +4,33 @@
 #include <vector>
 #include <set>
 #include <regex>
+#include <yaml-cpp/yaml.h>
+
+#include "rulePlugin.h"
 
 namespace SAIL
 {
-namespace core
+namespace rule
 {
 
-class Whitelist
-{
-public:
-    virtual ~Whitelist(){};
-    virtual std::set<std::string> Check(const std::set<std::string> &files) = 0;
-};
-
-class WhitelistImpl : public Whitelist
+class FileWhitelist : public RulePlugin
 {
 private:
     std::string filename;
     std::vector<std::regex> whitelist_patterns;
+    std::set<std::string> files;
 
 public:
-    WhitelistImpl(const std::string &fname);
-    virtual ~WhitelistImpl() = default;
-    virtual std::set<std::string> Check(const std::set<std::string> &files) override;
+    FileWhitelist(const YAML::Node & config);
+    virtual ~FileWhitelist() {};
+    virtual void beforeTrap(long tid,
+        const core::Histories & history,
+        core::RuleCheckMsgs & ruleCheckMsgs) override;
+    virtual void afterTrap(long tid,
+        const core::Histories & history,
+        core::RuleCheckMsgs & ruleCheckMsgs) override;
+    virtual void event(long tid, int status) override;
+    virtual void end() override;
 };
 
 } // namespace core

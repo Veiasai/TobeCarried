@@ -56,7 +56,6 @@ struct Parameter
 
 struct SyscallParameter
 {
-    int systemcallID;
     std::vector<Parameter> parameters;
 };
 

@@ -23,11 +23,11 @@ static bool hasEvent(int status)
 }
 
 Tracer::Tracer(std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp, 
-    std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report, std::shared_ptr<Whitelist> whitelist, int rootTracee) 
-    : up(up), cp(cp), rulemgr(rulemgr), report(report), whitelist(whitelist)
+    std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report, int rootTracee) 
+    : up(up), cp(cp), rulemgr(rulemgr), report(report)
 {
     brokenThreads = 0;
-    tracees[rootTracee] = std::make_unique<TraceeImpl>(rootTracee, up, cp, rulemgr, report, whitelist);
+    tracees[rootTracee] = std::make_unique<TraceeImpl>(rootTracee, up, cp, rulemgr, report);
     interrupt = false;
 }
 
@@ -70,7 +70,7 @@ void Tracer::run()
             if (isEvent(status, PTRACE_EVENT_FORK) || isEvent(status, PTRACE_EVENT_CLONE)) {
                 int newid = static_cast<int>(msg);
                 if (tracees.find(newid) == tracees.end())
-                    tracees[newid] = std::make_unique<TraceeImpl>(newid, up, cp, rulemgr, report, whitelist);
+                    tracees[newid] = std::make_unique<TraceeImpl>(newid, up, cp, rulemgr, report);
                 // ptrace(PTRACE_SYSCALL, newid, NULL, NULL);
             }
             ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
@@ -86,7 +86,7 @@ void Tracer::run()
         // but even in the former condition, newly cloned thread can still be attached to watch list automatically
         if (tracees.find(tid) == tracees.end())
         {
-            tracees[tid] = std::make_unique<TraceeImpl>(tid, up, cp, rulemgr, report, whitelist);
+            tracees[tid] = std::make_unique<TraceeImpl>(tid, up, cp, rulemgr, report);
         }
 
         try {

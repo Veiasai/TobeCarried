@@ -7,7 +7,7 @@
 
 #include "utils.h"
 #include "rule.h"
-
+#include "parameter.h"
 
 namespace SAIL { namespace rule {
 
@@ -19,10 +19,15 @@ namespace SAIL { namespace rule {
 class RulePlugin
 {
 public:
-    RulePlugin(const std::string & name, std::shared_ptr<utils::Utils> up, const YAML::Node& config);
     virtual ~RulePlugin() {};
-    virtual std::vector<core::RuleCheckMsg> check(int syscallNumber, const core::SyscallParameter & sp) = 0;
-
+    virtual void beforeTrap(long tid,
+        const core::Histories & history,
+        core::RuleCheckMsgs & ruleCheckMsgs) = 0;
+    virtual void afterTrap(long tid,
+        const core::Histories & history,
+        core::RuleCheckMsgs & ruleCheckMsgs) = 0;
+    virtual void event(long tid, int status) = 0;
+    virtual void end() = 0;
     // TODO: more time points
 };
 

@@ -24,8 +24,8 @@ namespace core
 {
 
 TraceeImpl::TraceeImpl(int tid, std::shared_ptr<utils::Utils> up, std::shared_ptr<utils::CustomPtrace> cp,
-                       std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report, std::shared_ptr<Whitelist> whitelist)
-    : tid(tid), up(up), cp(cp), rulemgr(rulemgr), report(report), whitelist(whitelist)
+                       std::shared_ptr<rule::RuleManager> rulemgr, std::shared_ptr<Report> report)
+    : tid(tid), up(up), cp(cp), rulemgr(rulemgr), report(report)
 {
     this->iscalling = true;
     this->callID = 0;
@@ -51,8 +51,6 @@ void TraceeImpl::trap()
     {
         cp->getRegs(this->tid, &this->history.back().first.ret_regs);
     }
-    // get all reached filenames
-    this->up->getFilenamesByProc(tid, fileset);
 
     switch (orig_rax)
     {
@@ -424,13 +422,13 @@ void TraceeImpl::end()
 {
     spdlog::info("Tracee {} invoked end", this->tid);
     // output(refresh) fileset to files.txt
-    std::string outfilename = "./logs/" + std::to_string(this->tid) + "_reached_files.txt";
-    this->up->strset2file(outfilename, this->fileset);
+    // std::string outfilename = "./logs/" + std::to_string(this->tid) + "_reached_files.txt";
+    // this->up->strset2file(outfilename, this->fileset);
 
     // whitelist
-    std::set<std::string> whitelist_result = whitelist->Check(fileset);
-    std::string outfilename2 = "./logs/" + std::to_string(this->tid) + "_reached_files_report.txt";
-    this->up->strset2file(outfilename2, whitelist_result);
+    // std::set<std::string> whitelist_result = whitelist->Check(fileset);
+    // std::string outfilename2 = "./logs/" + std::to_string(this->tid) + "_reached_files_report.txt";
+    // this->up->strset2file(outfilename2, whitelist_result);
 
     
     spdlog::info("Tracee {} finished end", this->tid);

@@ -86,7 +86,7 @@ void YamlRuleManager::afterTrap(long tid,
         core::RuleCheckMsgs & ruleCheckMsgs)
 {
     // TODO: refactor the rules as a default plugin
-    for (auto &rule : rules[history.back().second.systemcallID])
+    for (auto &rule : rules[history.back().first.call_regs.orig_rax])
         ruleCheckMsgs.push_back(rule->check(history.back().second));
 
 }
