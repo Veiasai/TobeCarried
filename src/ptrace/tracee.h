@@ -32,7 +32,7 @@ private:
     long callID;    //  auto-increment ID for every call
     volatile bool iscalling;
     std::vector<std::pair<Systemcall, SyscallParameter>> history;
-    std::vector<RuleCheckMsg> ruleCheckMsg;
+    std::vector<RuleCheckMsg> ruleCheckMsgs;
     std::shared_ptr<utils::Utils> up;
     std::shared_ptr<utils::CustomPtrace> cp;
     std::shared_ptr<rule::RuleManager> rulemgr;

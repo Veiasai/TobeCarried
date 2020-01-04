@@ -122,11 +122,6 @@ void Tracer::run()
 void Tracer::end()
 {
     interrupt = true;
-
-    // for (const auto & tracee : tracees)
-    // {
-    //     tracee.second->end();
-    // }
 }
 
 }}

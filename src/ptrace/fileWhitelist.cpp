@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include "fileWhitelist.h"
 #include "spdlog/spdlog.h"
 
@@ -6,14 +8,16 @@ namespace SAIL
 namespace rule
 {
 
-FileWhitelist::FileWhitelist(const YAML::Node & config)
+FileWhitelist::FileWhitelist(const YAML::Node & config,
+    std::shared_ptr<utils::Utils> up,
+    std::shared_ptr<core::Report> report)
+    : up(up), report(report)
 {
-
     std::vector<std::string> whitelist = config.as<std::vector<std::string>>();
 
-    for (auto rule : whitelist)
+    for (const auto & rule : whitelist)
     {
-        // spdlog::debug("whitelist item: {}", rule);
+        spdlog::debug("whitelist item: {}", rule);
         std::regex pattern(rule);
         this->whitelist_patterns.emplace_back(pattern);
     }
@@ -30,7 +34,7 @@ void FileWhitelist::afterTrap(long tid,
         const core::Histories & history, 
         core::RuleCheckMsgs & ruleCheckMsgs)
 {
-    // TODO: fill fileset
+    this->up->getFilenamesByProc(tid, files);
 }
 
 void FileWhitelist::event(long tid, int status)
@@ -40,12 +44,11 @@ void FileWhitelist::event(long tid, int status)
 
 void FileWhitelist::end()
 {
-    std::set<std::string> result;
-
+    // TODO: tid?
+    report->write(0, "filewhitelist check");
     for (auto it = files.begin(); it != files.end(); it++)
     {
         bool flag = false;
-        // spdlog::debug("whitelist file: {}", (*it));
         for (auto rule : whitelist_patterns)
         {
             if (std::regex_match((*it), rule))
@@ -57,9 +60,9 @@ void FileWhitelist::end()
         }
 
         if (flag)
-            result.insert("[Pass] " + (*it));
+            report->write(0, "[Pass] " + (*it));
         else
-            result.insert("[Fail] " + (*it));
+            report->write(0, "[Fail] " + (*it));
     }
 }
 

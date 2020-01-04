@@ -7,6 +7,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include "rulePlugin.h"
+#include "report.h"
 
 namespace SAIL
 {
@@ -19,9 +20,13 @@ private:
     std::string filename;
     std::vector<std::regex> whitelist_patterns;
     std::set<std::string> files;
+    std::shared_ptr<utils::Utils> up;
+    std::shared_ptr<core::Report> report;
 
 public:
-    FileWhitelist(const YAML::Node & config);
+    FileWhitelist(const YAML::Node & config, 
+        std::shared_ptr<utils::Utils> up,
+        std::shared_ptr<core::Report> report);
     virtual ~FileWhitelist() {};
     virtual void beforeTrap(long tid,
         const core::Histories & history,

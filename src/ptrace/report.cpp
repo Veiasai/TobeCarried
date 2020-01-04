@@ -1,9 +1,11 @@
 #include <iostream>
 #include <assert.h>
+#include <sstream>
 
 #include "report.h"
 #include "spdlog/spdlog.h"
 
+// TODO: exception handle
 namespace SAIL
 {
 namespace core
@@ -11,10 +13,10 @@ namespace core
 ReportImpl::ReportImpl(const std::string & filename)
 {
     this->filename = filename;
-    this->fs = std::make_unique<std::fstream>();
-    fs->open(filename.c_str(), std::ios::app);
-    assert(fs->is_open());
-    if (!fs->is_open())
+    this->fs = std::fstream();
+    fs.open(filename.c_str(), std::ios::app);
+    assert(fs.is_open());
+    if (!fs.is_open())
     {
         spdlog::error("Report failed to open {}!", filename.c_str());
     }
@@ -22,29 +24,36 @@ ReportImpl::ReportImpl(const std::string & filename)
 
 size_t ReportImpl::size()
 {
-    fs->flush();
-    return fs->tellp();
+    fs.flush();
+    return fs.tellp();
 }
 
-int ReportImpl::write(const long tid, const long callID, const core::RuleCheckMsg &rcmsg)
+int ReportImpl::write(const long tid, const core::RuleCheckMsg &rcmsg)
 {
+    // TODO: separated files?
     std::string approval = (rcmsg.approval) ? "pass" : "warning";
 
-    (*fs) << tid << "," << callID << "," << rcmsg.ruleID << "," << approval << "," << rcmsg.msg << std::endl;
+    fs << tid << "," << rcmsg.ruleID << "," << approval << "," << rcmsg.msg << std::endl;
 
+    return 0;
+}
+
+int ReportImpl::write(const long tid, const std::string & customOutput)
+{
+    // TODO: separated files?
+    fs << customOutput << std::endl;
     return 0;
 }
 
 int ReportImpl::flush()
 {
-    fs->flush();
-
+    fs.flush();
     return 0;
 }
 
 ReportImpl::~ReportImpl()
 {
-    fs->close();
+
 }
 
 } // namespace core

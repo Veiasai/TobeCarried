@@ -5,6 +5,7 @@
 #include <yaml-cpp/yaml.h>
 #include <memory>
 
+#include "utils.h"
 #include "rule.h"
 #include "report.h"
 #include "rulePlugin.h"
@@ -29,6 +30,8 @@ public:
 class YamlRuleManager : public RuleManager
 {
 private:
+    std::shared_ptr<utils::Utils> up;
+    std::shared_ptr<core::Report> report;
     // map from syscall number to rules applied
     std::map<int, std::vector<std::unique_ptr<Rule>>> rules;
     std::map<std::string, std::unique_ptr<RulePlugin>> plugins;
@@ -36,7 +39,9 @@ private:
     void ruleInit(const YAML::Node & yaml);
     void pluginInit(const YAML::Node & yaml);
 public:
-    YamlRuleManager(const YAML::Node & yaml);
+    YamlRuleManager(const YAML::Node & yaml, 
+        std::shared_ptr<utils::Utils> up,
+        std::shared_ptr<core::Report> report);
     virtual ~YamlRuleManager() {};
     virtual void beforeTrap(long tid,
         const core::Histories & history,

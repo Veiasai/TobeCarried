@@ -5,7 +5,7 @@
 
 #include "../tracee.h"
 #include "../utils.h"
-
+#include "../report.h"
 
 namespace SAIL { namespace Test {
 
@@ -49,7 +49,8 @@ public:
 class MockReport : public Report
 {
 public:
-    MOCK_METHOD(int, write, (const long tid, const long callID, const core::RuleCheckMsg &rcmsg), (override));
+    MOCK_METHOD(int, write, (const long tid, const core::RuleCheckMsg &rcmsg), (override));
+    MOCK_METHOD(int, write, (const long tid, const std::string &), (override));
     MOCK_METHOD(int, flush, (), (override));
     MOCK_METHOD(size_t, size, (), (override));
 };

@@ -10,7 +10,10 @@ namespace SAIL
 namespace rule
 {
 
-YamlRuleManager::YamlRuleManager(const YAML::Node &yaml)
+YamlRuleManager::YamlRuleManager(const YAML::Node &yaml, 
+    std::shared_ptr<utils::Utils> up,
+    std::shared_ptr<core::Report> report)
+    : up(up), report(report)
 {
     const YAML::Node rules = yaml["rules"];
     const YAML::Node plugins = yaml["plugins"];
@@ -74,8 +77,8 @@ void YamlRuleManager::ruleInit(const YAML::Node &yaml)
 void YamlRuleManager::pluginInit(const YAML::Node &yaml)
 {
     // TODO
-    plugins["FileWhitelist"] = std::make_unique<FileWhitelist>(yaml["filewhitelist"]);
-    plugins["Network"] = std::make_unique<NetworkMonitor>(yaml["network"]);
+    plugins["FileWhitelist"] = std::make_unique<FileWhitelist>(yaml["filewhitelist"], this->up, this->report);
+    plugins["Network"] = std::make_unique<NetworkMonitor>(yaml["network"], this->up, this->report);
 }
 
 

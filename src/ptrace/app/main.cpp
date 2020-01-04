@@ -109,8 +109,8 @@ int main(int argc,char **argv){
 
         std::shared_ptr<utils::CustomPtrace> cp = std::make_shared<utils::CustomPtraceImpl>();
         std::shared_ptr<utils::Utils> up = std::make_shared<utils::UtilsImpl>(cp);
-        std::shared_ptr<rule::RuleManager> ymlmgr = std::make_shared<SAIL::rule::YamlRuleManager>(config);
         std::shared_ptr<core::Report> report = std::make_shared<core::ReportImpl>(result["r"].as<std::string>());
+        std::shared_ptr<rule::RuleManager> ymlmgr = std::make_shared<SAIL::rule::YamlRuleManager>(config, up, report);
         
         tracer = std::make_unique<core::Tracer>(up, cp, ymlmgr, report, rootTracee);
         signal(SIGINT, INThandler);
@@ -118,6 +118,10 @@ int main(int argc,char **argv){
 
         // Exit
         kill(rootTracee, SIGKILL);
+
+        // Report
+        ymlmgr->end();
+        report->flush();
     } catch (std::exception & e){
         std::cout << options.help() << std::endl;
         std::cout << e.what() << std::endl;

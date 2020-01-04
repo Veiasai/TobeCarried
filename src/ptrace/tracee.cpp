@@ -102,12 +102,12 @@ void TraceeImpl::trap()
     if (!this->iscalling)
     {
         this->history.back().second = this->syscallParams;
-        this->rulemgr->afterTrap(this->tid, this->history, this->ruleCheckMsg);
+        this->rulemgr->afterTrap(this->tid, this->history, this->ruleCheckMsgs);
         this->callID++;
     }
     else
     {
-        this->rulemgr->beforeTrap(this->tid, this->history, this->ruleCheckMsg);
+        this->rulemgr->beforeTrap(this->tid, this->history, this->ruleCheckMsgs);
     }
     this->iscalling = !this->iscalling;
 }
@@ -415,22 +415,16 @@ const Histories &TraceeImpl::getHistory()
 
 const RuleCheckMsgs &TraceeImpl::getRuleCheckMsg()
 {
-    return this->ruleCheckMsg;
+    return this->ruleCheckMsgs;
 }
 
 void TraceeImpl::end()
 {
     spdlog::info("Tracee {} invoked end", this->tid);
-    // output(refresh) fileset to files.txt
-    // std::string outfilename = "./logs/" + std::to_string(this->tid) + "_reached_files.txt";
-    // this->up->strset2file(outfilename, this->fileset);
-
-    // whitelist
-    // std::set<std::string> whitelist_result = whitelist->Check(fileset);
-    // std::string outfilename2 = "./logs/" + std::to_string(this->tid) + "_reached_files_report.txt";
-    // this->up->strset2file(outfilename2, whitelist_result);
-
-    
+    for (const auto & ruleCheckMsg : ruleCheckMsgs)
+    {
+        this->report->write(this->tid, ruleCheckMsg);
+    }
     spdlog::info("Tracee {} finished end", this->tid);
 }
 

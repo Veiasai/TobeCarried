@@ -8,5 +8,4 @@ target_link_libraries(ptrace PRIVATE yaml-cpp)
 target_link_libraries(ptrace PRIVATE cxxopts)
 
 configure_file(example.yml example.yml)
-configure_file(whitelist.yml whitelist.yml)
 configure_file(start.sh start.sh)

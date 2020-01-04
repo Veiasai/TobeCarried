@@ -4,6 +4,8 @@
 #include <yaml-cpp/yaml.h>
 
 #include "rulePlugin.h"
+#include "utils.h"
+#include "report.h"
 
 namespace SAIL
 {
@@ -13,9 +15,12 @@ namespace rule
 class NetworkMonitor : public RulePlugin
 {
 private:
-
+    std::shared_ptr<utils::Utils> up;
+    std::shared_ptr<core::Report> report;
 public:
-    NetworkMonitor(const YAML::Node & config);
+    NetworkMonitor(const YAML::Node & config,
+        std::shared_ptr<utils::Utils> up,
+        std::shared_ptr<core::Report> report);
     virtual ~NetworkMonitor() {};
     virtual void beforeTrap(long tid,
         const core::Histories & history,

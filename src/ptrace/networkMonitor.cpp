@@ -7,7 +7,10 @@ namespace rule
 
 // TBC TODO:
 
-NetworkMonitor::NetworkMonitor(const YAML::Node & config)
+NetworkMonitor::NetworkMonitor(const YAML::Node & config,
+        std::shared_ptr<utils::Utils> up,
+        std::shared_ptr<core::Report> report)
+        : up(up), report(report)
 {
 
 }
