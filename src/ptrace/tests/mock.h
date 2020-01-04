@@ -36,7 +36,13 @@ public:
 class MockRuleManager : public RuleManager
 {
 public:
-    MOCK_METHOD(std::vector<core::RuleCheckMsg>, check, (int syscallNumber, const core::SyscallParameter &sp), (override));
+    MOCK_METHOD(void, beforeTrap, (long tid, 
+        const core::Histories & history, 
+        core::RuleCheckMsgs & ruleCheckMsgs), (override));
+    MOCK_METHOD(void, afterTrap, (long tid, 
+        const core::Histories & history, 
+        core::RuleCheckMsgs & ruleCheckMsgs), (override));
+    MOCK_METHOD(void, event, (long tid, int status), (override));
 };
 
 class MockReport : public Report

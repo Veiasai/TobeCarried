@@ -74,6 +74,8 @@ void Tracer::run()
                 // ptrace(PTRACE_SYSCALL, newid, NULL, NULL);
             }
             ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
+
+            this->rulemgr->event(tid, status);
             continue;
         }
 

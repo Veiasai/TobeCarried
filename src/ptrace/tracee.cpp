@@ -45,11 +45,11 @@ void TraceeImpl::trap()
     if (this->iscalling)
     {
         this->history.emplace_back();
-        cp->getRegs(this->tid, &this->history.back().call_regs);
+        cp->getRegs(this->tid, &this->history.back().first.call_regs);
     }
     else
     {
-        cp->getRegs(this->tid, &this->history.back().ret_regs);
+        cp->getRegs(this->tid, &this->history.back().first.ret_regs);
     }
     // get all reached filenames
     this->up->getFilenamesByProc(tid, fileset);
@@ -103,18 +103,13 @@ void TraceeImpl::trap()
     // check
     if (!this->iscalling)
     {
-        // spdlog::debug("[tid: {}] Start Check SYSCALL {}", tid, orig_rax);
-        std::vector<RuleCheckMsg> cnt = this->rulemgr->check(orig_rax, this->syscallParams);
-        // spdlog::debug("[tid: {}] Finish Check SYSCALL {}, checkMsgSize {}", tid, orig_rax, cnt.size());
-        for (auto &checkMsg : cnt)
-        {
-            //TODO log
-            // spdlog::debug("[tid: {}] Report CheckMsg {}", tid, checkMsg);
-            report->write(this->tid, this->callID, checkMsg);
-        }
+        this->history.back().second = this->syscallParams;
+        this->rulemgr->afterTrap(this->tid, this->history, this->ruleCheckMsg);
         this->callID++;
-        report->flush();
-        this->ruleCheckMsg.emplace_back(std::move(cnt));
+    }
+    else
+    {
+        this->rulemgr->beforeTrap(this->tid, this->history, this->ruleCheckMsg);
     }
     this->iscalling = !this->iscalling;
 }
@@ -129,7 +124,7 @@ void TraceeImpl::uname()
     }
     else
     {
-        struct utsname *paras = (struct utsname *)(this->history.back().call_regs.rdi);
+        struct utsname *paras = (struct utsname *)(this->history.back().first.call_regs.rdi);
         char p[MAX_FILENAME_SIZE];
 
         struct utsname para;
@@ -151,14 +146,14 @@ void TraceeImpl::sysExecve()
     // int execve(const char *filename, char *const argv[], char *const envp[]);
     if (this->iscalling)
     {
-        const char *filename = (char *)this->history.back().call_regs.rdi;
+        const char *filename = (char *)this->history.back().first.call_regs.rdi;
         assert(filename);
 
         this->up->readStrFrom(this->tid, filename, this->localFilename, MAX_FILENAME_SIZE);
         this->syscallParams.parameters[ParameterIndex::First] = Parameter(pointer, MAX_FILENAME_SIZE, this->localFilename, 0);
         spdlog::debug("[tid: {}] execve: filename: {}", tid, this->localFilename);
 
-        char **paras = (char **)(this->history.back().call_regs.rsi);
+        char **paras = (char **)(this->history.back().first.call_regs.rsi);
         char p[MAX_FILENAME_SIZE];
         int i = 0;
         std::string argvs = "";
@@ -197,20 +192,20 @@ void TraceeImpl::open()
         // filename is address in target program memory space
         // need to grab it to tracee memory space
         // when encountering pointer, caution needed
-        const char *filename = (char *)this->history.back().call_regs.rdi;
+        const char *filename = (char *)this->history.back().first.call_regs.rdi;
         assert(filename);
 
         this->up->readStrFrom(this->tid, filename, this->localFilename, MAX_FILENAME_SIZE);
         this->syscallParams.parameters[ParameterIndex::First] = Parameter(pointer, MAX_FILENAME_SIZE, this->localFilename, 0);
 
-        const int flags = (int)this->history.back().call_regs.rsi;
+        const int flags = (int)this->history.back().first.call_regs.rsi;
         this->syscallParams.parameters[ParameterIndex::Second] = Parameter(nonpointer, 0, NULL, flags);
 
         spdlog::debug("[tid: {}] Open: filename: {}", tid, this->localFilename);
     }
     else
     {
-        const unsigned long long fd = this->history.back().ret_regs.rax;
+        const unsigned long long fd = this->history.back().first.ret_regs.rax;
         this->syscallParams.parameters[ParameterIndex::Ret] = Parameter(nonpointer, 0, NULL, fd);
     }
 }
@@ -226,20 +221,20 @@ void TraceeImpl::openat()
 
     if (this->iscalling)
     {
-        const int dirfd = (int)this->history.back().call_regs.rdi;
+        const int dirfd = (int)this->history.back().first.call_regs.rdi;
         this->syscallParams.parameters[ParameterIndex::First] = Parameter(nonpointer, 0, NULL, dirfd);
 
-        const char *pathname = (char *)this->history.back().call_regs.rsi;
+        const char *pathname = (char *)this->history.back().first.call_regs.rsi;
         this->up->readStrFrom(this->tid, pathname, this->localFilename, MAX_FILENAME_SIZE);
         this->syscallParams.parameters[ParameterIndex::Second] = Parameter(pointer, MAX_FILENAME_SIZE, this->localFilename, 0);
 
-        const int flags = (int)this->history.back().call_regs.rdx;
+        const int flags = (int)this->history.back().first.call_regs.rdx;
         this->syscallParams.parameters[ParameterIndex::Third] = Parameter(nonpointer, 0, NULL, flags);
         spdlog::debug("[tid: {}] Openat: dirfd: {}  filename: {}", tid, dirfd, this->localFilename);
     }
     else
     {
-        const int ret = (int)this->history.back().ret_regs.rax;
+        const int ret = (int)this->history.back().first.ret_regs.rax;
         this->syscallParams.parameters[ParameterIndex::Ret] = Parameter(nonpointer, 0, NULL, ret);
     }
 }
@@ -253,11 +248,11 @@ void TraceeImpl::ioctl()
     */
     if (this->iscalling)
     {
-        const int fd = (int)this->history.back().call_regs.rdi;
+        const int fd = (int)this->history.back().first.call_regs.rdi;
         spdlog::debug("[tid: {}] ioctl Call: fd: {}", tid, fd);
         this->syscallParams.parameters[ParameterIndex::First] = Parameter(nonpointer, 0, NULL, fd);
 
-        const unsigned long int cmd = (unsigned long int)this->history.back().call_regs.rsi;
+        const unsigned long int cmd = (unsigned long int)this->history.back().first.call_regs.rsi;
         spdlog::debug("[tid: {}] ioctl Call: cmd: 0x{:x}", tid, cmd);
         this->syscallParams.parameters[ParameterIndex::Second] = Parameter(nonpointer, 0, NULL, cmd);
 
@@ -278,7 +273,7 @@ void TraceeImpl::ioctl()
     }
     else
     {
-        const int ret = (int)this->history.back().ret_regs.rax;
+        const int ret = (int)this->history.back().first.ret_regs.rax;
         this->syscallParams.parameters[ParameterIndex::Ret] = Parameter(nonpointer, 0, NULL, ret);
     }
 }
@@ -286,7 +281,7 @@ void TraceeImpl::read()
 {
     if (this->iscalling)
     {
-        const int fd = (int)this->history.back().call_regs.rdi;
+        const int fd = (int)this->history.back().first.call_regs.rdi;
         this->syscallParams.parameters[ParameterIndex::First] = Parameter(nonpointer, 0, NULL, fd);
         spdlog::debug("[tid: {}] Read Call: fd: {}", tid, fd);
 
@@ -300,14 +295,14 @@ void TraceeImpl::read()
     else
     {
         // rax can be -1, but std::min required two args with the same type
-        const int size = this->history.back().ret_regs.rax;
+        const int size = this->history.back().first.ret_regs.rax;
         this->syscallParams.parameters[ParameterIndex::Ret] = Parameter(nonpointer, 0, NULL, size);
         if (size < 0)
         {
             spdlog::debug("[tid: {}] Read Ret less than 0", tid);
             return;
         }
-        const char *buf = (char *)this->history.back().call_regs.rsi;
+        const char *buf = (char *)this->history.back().first.call_regs.rsi;
         char localBuf[MAX_READ_SIZE];
         spdlog::debug("[tid: {}] Read Ret: size: {}", tid, size);
         this->up->readBytesFrom(this->tid, buf, localBuf, std::min(size, MAX_READ_SIZE));
@@ -320,7 +315,7 @@ void TraceeImpl::write()
 {
     if (this->iscalling)
     {
-        const int fd = (int)this->history.back().call_regs.rdi;
+        const int fd = (int)this->history.back().first.call_regs.rdi;
         this->syscallParams.parameters[ParameterIndex::First] = Parameter(nonpointer, 0, NULL, fd);
         spdlog::debug("[tid: {}] Write Call: fd: {}", tid, fd);
 
@@ -330,21 +325,21 @@ void TraceeImpl::write()
         {
             spdlog::debug("[tid: {}] Write Call: filename: {}", tid, filename);
         }
-        // const char *buf = (char *)this->history.back().call_regs.rsi;
+        // const char *buf = (char *)this->history.back().first.call_regs.rsi;
         // char localBuf[MAX_READ_SIZE];
         // this->up->readBytesFrom(this->tid, buf, localBuf, MAX_READ_SIZE);
         // spdlog::debug("[tid: {}] Write Ret: content: {}", tid, localBuf);
     }
     else
     {
-        const int size = this->history.back().ret_regs.rax;
+        const int size = this->history.back().first.ret_regs.rax;
         this->syscallParams.parameters[ParameterIndex::Ret] = Parameter(nonpointer, 0, NULL, size);
         if (size < 0)
         {
             spdlog::debug("[tid: {}] Write Ret less than 0", tid);
             return;
         }
-        const char *buf = (char *)this->history.back().call_regs.rsi;
+        const char *buf = (char *)this->history.back().first.call_regs.rsi;
         char localBuf[MAX_READ_SIZE];
         spdlog::debug("[tid: {}] Write Ret: size: {}", tid, size);
         this->up->readBytesFrom(this->tid, buf, localBuf, std::min(size, MAX_READ_SIZE));
@@ -360,13 +355,13 @@ void TraceeImpl::socket()
 {
     if (this->iscalling)
     {
-        const unsigned long domain = this->history.back().call_regs.rdi;
+        const unsigned long domain = this->history.back().first.call_regs.rdi;
         this->syscallParams.parameters[ParameterIndex::First] = Parameter(nonpointer, 0, NULL, domain);
 
-        const unsigned long type = this->history.back().call_regs.rsi;
+        const unsigned long type = this->history.back().first.call_regs.rsi;
         this->syscallParams.parameters[ParameterIndex::Second] = Parameter(nonpointer, 0, NULL, type);
 
-        const unsigned long protocol = this->history.back().call_regs.rdx;
+        const unsigned long protocol = this->history.back().first.call_regs.rdx;
         this->syscallParams.parameters[ParameterIndex::Third] = Parameter(nonpointer, 0, NULL, protocol);
 
         spdlog::debug("[tid: {}] Socket Call: arg: [{}, {}, {}]", tid, domain, type, protocol);
@@ -377,11 +372,11 @@ void TraceeImpl::connect()
 {
     if (this->iscalling)
     {
-        const unsigned long sockfd = this->history.back().call_regs.rdi;
+        const unsigned long sockfd = this->history.back().first.call_regs.rdi;
         this->syscallParams.parameters[ParameterIndex::First] = Parameter(nonpointer, 0, NULL, sockfd);
 
-        const unsigned long sockaddr = this->history.back().call_regs.rsi;
-        const unsigned long addrlen = this->history.back().call_regs.rdx;
+        const unsigned long sockaddr = this->history.back().first.call_regs.rsi;
+        const unsigned long addrlen = this->history.back().first.call_regs.rdx;
         char * fp = new char[addrlen];
         this->up->readBytesFrom(this->tid, reinterpret_cast<char *>(sockaddr), fp, addrlen);
         this->syscallParams.parameters[ParameterIndex::Second] = Parameter(pointer, addrlen, fp, sockaddr);
@@ -406,7 +401,7 @@ void TraceeImpl::clone()
     }
     else
     {
-        long rax = this->history.back().ret_regs.rax;
+        long rax = this->history.back().first.ret_regs.rax;
         if (rax < 0)
         {
             spdlog::error("SYS_clone ret less than 0");
@@ -415,12 +410,12 @@ void TraceeImpl::clone()
     }
 }
 
-const std::vector<Systemcall> &TraceeImpl::getHistory()
+const Histories &TraceeImpl::getHistory()
 {
     return this->history;
 }
 
-const std::vector<std::vector<RuleCheckMsg>> &TraceeImpl::getRuleCheckMsg()
+const RuleCheckMsgs &TraceeImpl::getRuleCheckMsg()
 {
     return this->ruleCheckMsg;
 }

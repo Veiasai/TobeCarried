@@ -6,7 +6,9 @@
 #include <memory>
 
 #include "rule.h"
+#include "report.h"
 #include "rulePlugin.h"
+#include "parameter.h"
 
 namespace SAIL { namespace rule {
 
@@ -14,7 +16,13 @@ class RuleManager
 {
 public:
     virtual ~RuleManager() {};
-    virtual std::vector<core::RuleCheckMsg> check(int syscallNumber, const core::SyscallParameter & sp) = 0;
+    virtual void beforeTrap(long tid, 
+        const core::Histories & history, 
+        core::RuleCheckMsgs & ruleCheckMsgs) = 0;
+    virtual void afterTrap(long tid, 
+        const core::Histories & history, 
+        core::RuleCheckMsgs & ruleCheckMsgs) = 0;
+    virtual void event(long tid, int status) = 0;
 };
 
 class YamlRuleManager : public RuleManager
@@ -29,7 +37,13 @@ private:
 public:
     YamlRuleManager(const YAML::Node & yaml);
     virtual ~YamlRuleManager() {};
-    virtual std::vector<core::RuleCheckMsg> check(int syscall, const core::SyscallParameter & sp) override;
+    virtual void beforeTrap(long tid,
+        const core::Histories & history,
+        core::RuleCheckMsgs & ruleCheckMsgs) override;
+    virtual void afterTrap(long tid,
+        const core::Histories & history,
+        core::RuleCheckMsgs & ruleCheckMsgs) override;
+    virtual void event(long tid, int status) override;
 };
 
 }}

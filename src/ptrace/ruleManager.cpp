@@ -73,20 +73,28 @@ void YamlRuleManager::pluginInit(const YAML::Node &yaml)
     // TODO
 }
 
-std::vector<core::RuleCheckMsg> YamlRuleManager::check(int syscall, const core::SyscallParameter &sp)
+
+void YamlRuleManager::beforeTrap(long tid, 
+        const core::Histories & history, 
+        core::RuleCheckMsgs & ruleCheckMsgs)
 {
-    std::vector<core::RuleCheckMsg> res;
-    for (auto &rule : rules[syscall])
-        res.push_back(rule->check(sp));
+    
+}
 
-    for (auto &plugin: plugins)
-    {
-        std::vector<core::RuleCheckMsg> pluginRes = plugin.second->check(syscall, sp);
-        res.insert(res.end(), pluginRes.begin(), pluginRes.end());
-    }
+void YamlRuleManager::afterTrap(long tid, 
+        const core::Histories & history, 
+        core::RuleCheckMsgs & ruleCheckMsgs)
+{
+    // TODO: refactor the rules as a default plugin
+    for (auto &rule : rules[history.back().second.systemcallID])
+        ruleCheckMsgs.push_back(rule->check(history.back().second));
 
-    return res;
-};
+}
+
+void YamlRuleManager::event(long tid, int status)
+{
+
+}
 
 } // namespace rule
 } // namespace SAIL
