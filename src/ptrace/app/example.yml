@@ -8,3 +8,13 @@ rules:
         action: matchRe
         value: testFile
 
+filewhitelist:
+  [a.txt, b.txt, /home/ubuntu/CTP/build/ptrace/app/testFile]
+
+network:
+  - addrbanned:
+    - 10.0.0.0
+    - 10.0.0.0
+  - connection:
+      limit: 5
+

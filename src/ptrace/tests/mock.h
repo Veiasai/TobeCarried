@@ -43,6 +43,7 @@ public:
         const core::Histories & history, 
         core::RuleCheckMsgs & ruleCheckMsgs), (override));
     MOCK_METHOD(void, event, (long tid, int status), (override));
+    MOCK_METHOD(void, end, (), (override));
 };
 
 class MockReport : public Report

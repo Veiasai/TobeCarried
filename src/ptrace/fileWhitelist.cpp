@@ -1,4 +1,4 @@
-#include "whitelist.h"
+#include "fileWhitelist.h"
 #include "spdlog/spdlog.h"
 
 namespace SAIL
@@ -30,7 +30,7 @@ void FileWhitelist::afterTrap(long tid,
         const core::Histories & history, 
         core::RuleCheckMsgs & ruleCheckMsgs)
 {
-
+    // TODO: fill fileset
 }
 
 void FileWhitelist::event(long tid, int status)

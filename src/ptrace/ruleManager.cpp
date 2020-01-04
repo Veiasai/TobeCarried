@@ -2,6 +2,9 @@
 
 #include <iostream>
 
+#include "fileWhitelist.h"
+#include "networkMonitor.h"
+
 namespace SAIL
 {
 namespace rule
@@ -71,6 +74,8 @@ void YamlRuleManager::ruleInit(const YAML::Node &yaml)
 void YamlRuleManager::pluginInit(const YAML::Node &yaml)
 {
     // TODO
+    plugins["FileWhitelist"] = std::make_unique<FileWhitelist>(yaml["filewhitelist"]);
+    plugins["Network"] = std::make_unique<NetworkMonitor>(yaml["network"]);
 }
 
 
@@ -78,7 +83,10 @@ void YamlRuleManager::beforeTrap(long tid,
         const core::Histories & history, 
         core::RuleCheckMsgs & ruleCheckMsgs)
 {
-    
+    for (auto & plugin : plugins)
+    {
+        plugin.second->beforeTrap(tid, history, ruleCheckMsgs);
+    }
 }
 
 void YamlRuleManager::afterTrap(long tid, 
@@ -89,11 +97,23 @@ void YamlRuleManager::afterTrap(long tid,
     for (auto &rule : rules[history.back().first.call_regs.orig_rax])
         ruleCheckMsgs.push_back(rule->check(history.back().second));
 
+    for (auto & plugin : plugins)
+    {
+        plugin.second->afterTrap(tid, history, ruleCheckMsgs);
+    }
 }
 
 void YamlRuleManager::event(long tid, int status)
 {
 
+}
+
+void YamlRuleManager::end()
+{
+    for (auto & plugin : plugins)
+    {
+        plugin.second->end();
+    }
 }
 
 } // namespace rule

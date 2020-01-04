@@ -23,6 +23,7 @@ public:
         const core::Histories & history, 
         core::RuleCheckMsgs & ruleCheckMsgs) = 0;
     virtual void event(long tid, int status) = 0;
+    virtual void end() = 0;
 };
 
 class YamlRuleManager : public RuleManager
@@ -44,6 +45,7 @@ public:
         const core::Histories & history,
         core::RuleCheckMsgs & ruleCheckMsgs) override;
     virtual void event(long tid, int status) override;
+    virtual void end();
 };
 
 }}

@@ -8,7 +8,6 @@
 #include "utils.h"
 #include "ruleManager.h"
 #include "report.h"
-#include "whitelist.h"
 
 namespace SAIL { namespace core {
     
