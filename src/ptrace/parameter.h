@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <stdio.h>
+#include <sys/user.h>
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/basic_file_sink.h"
 
@@ -16,7 +17,6 @@ enum ParameterIndex
     Fourth,
     Fifth,
     Sixth,
-    
 };
 
 enum ParameterType
@@ -53,17 +53,31 @@ struct Parameter
     }
 };
 
-struct SyscallParameter
-{
-    std::vector<Parameter> parameters;
-};
-
 struct RuleCheckMsg
 {
     bool approval;
     int ruleID;
     std::string msg;
 };
+
+struct Systemcall {
+    struct user_regs_struct call_regs;
+    struct user_regs_struct ret_regs;
+    Systemcall() {};
+};
+
+struct WarnInfo {
+    // a WarnInfo is related to one specific systemcall
+    // callID is that systemcall's index in history
+    int callID;
+
+    // TODO: add explanation to this warning
+    // e.g. vector<int> breakRules;  show the rules that be breaked;  
+};
+
+using Parameters = std::vector<Parameter>;
+using Histories = std::vector<std::pair<Systemcall, Parameters>>;
+using RuleCheckMsgs = std::vector<RuleCheckMsg>;
 
 
 }}

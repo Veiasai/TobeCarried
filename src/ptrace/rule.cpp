@@ -1,23 +1,37 @@
-#include "rule.h"
 #include <regex>
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/basic_file_sink.h"
+
+#include "rule.h"
 
 namespace SAIL
 {
 namespace rule
 {
 
-RuleImpl::RuleImpl(int ID, int target_syscall, const std::string &name, RuleLevel level)
-    : ID(ID), target_syscall(target_syscall), name(name), level(level){};
+RuleImpl::RuleImpl(int ID, int target_syscall, const std::string &name)
+    : ID(ID), target_syscall(target_syscall), name(name) {};
 
-core::RuleCheckMsg RuleImpl::check(const core::SyscallParameter &sp)
+core::RuleCheckMsg RuleImpl::check(const core::Parameters &sp)
 {
     core::RuleCheckMsg rcm = {true, ID, ""};
+    spdlog::debug("rule {}:  ret {}, p1 {}, p2 {}, p3 {}, p4 {}, p5 {}, p6 {}", 
+        ID, 
+        sp[core::ParameterIndex::Ret].type,
+        sp[core::ParameterIndex::First].type,
+        sp[core::ParameterIndex::Second].type,
+        sp[core::ParameterIndex::Third].type,
+        sp[core::ParameterIndex::Fourth].type,
+        sp[core::ParameterIndex::Fifth].type,
+        sp[core::ParameterIndex::Sixth].type);
 
-    for (auto &f : rulevalues)
+    for (const auto &f : rulevalues)
     {
         if (f(sp))
         {
             rcm.approval = false;
+
+            // TODO: msg vary
             rcm.msg = "matched";
             return rcm;
         }
@@ -27,7 +41,7 @@ core::RuleCheckMsg RuleImpl::check(const core::SyscallParameter &sp)
 
 RuleInfo RuleImpl::info()
 {
-    RuleInfo info = {target_syscall, ID, name, level};
+    RuleInfo info = {target_syscall, ID, name};
     return info;
 };
 
@@ -35,19 +49,18 @@ int RuleImpl::matchRe(core::ParameterIndex idx, const std::string &re)
 {
     const std::regex pattern(re);
 
-    rulevalues.emplace_back([idx, pattern](const core::SyscallParameter &sp) -> int {
-        std::regex pattern;
-        return std::regex_match((char *)(sp.parameters[idx].value.p), pattern) ? 1 : 0;
+    rulevalues.emplace_back([idx, pattern](const core::Parameters &sp) -> bool {
+        return std::regex_match((char *)(sp[idx].value.p), pattern);
     });
     return 0;
 };
 
 int RuleImpl::matchBytes(core::ParameterIndex idx, const std::vector<unsigned char> &vc)
 {
-    rulevalues.emplace_back([idx, vc](const core::SyscallParameter &sp) -> int {
-        char *str = (char *)sp.parameters[idx].value.p;
-        long spsize = sp.parameters[idx].size;
-        int matched = 0;
+    rulevalues.emplace_back([idx, vc](const core::Parameters &sp) -> bool {
+        char *str = (char *)sp[idx].value.p;
+        long spsize = sp[idx].size;
+        bool matched = false;
 
         if (vc.size() > spsize)
         {
@@ -63,7 +76,7 @@ int RuleImpl::matchBytes(core::ParameterIndex idx, const std::vector<unsigned ch
                         break;
 
                     if (j == vc.size() - 1)
-                        matched = 1;
+                        matched = true;
                 }
 
                 if (matched)
@@ -76,32 +89,32 @@ int RuleImpl::matchBytes(core::ParameterIndex idx, const std::vector<unsigned ch
 
 int RuleImpl::equal(core::ParameterIndex idx, long value)
 {
-    rulevalues.emplace_back([idx, value](const core::SyscallParameter &sp) -> int {
-        return (sp.parameters[idx].value.value == value) ? 1 : 0;
+    rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> bool {
+        return (sp[idx].value.value == value);
     });
     return 0;
 };
 
 int RuleImpl::notEqual(core::ParameterIndex idx, long value)
 {
-    rulevalues.emplace_back([idx, value](const core::SyscallParameter &sp) -> int {
-        return (sp.parameters[idx].value.value != value) ? 1 : 0;
+    rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> bool {
+        return (sp[idx].value.value != value);
     });
     return 0;
 };
 
 int RuleImpl::greater(core::ParameterIndex idx, long value)
 {
-    rulevalues.emplace_back([idx, value](const core::SyscallParameter &sp) -> int {
-        return (sp.parameters[idx].value.value > value) ? 1 : 0;
+    rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> bool {
+        return (sp[idx].value.value > value);
     });
     return 0;
 };
 
 int RuleImpl::notGreater(core::ParameterIndex idx, long value)
 {
-    rulevalues.emplace_back([idx, value](const core::SyscallParameter &sp) -> int {
-        return (sp.parameters[idx].value.value <= value) ? 1 : 0;
+    rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> bool {
+        return (sp[idx].value.value <= value);
     });
     return 0;
 };

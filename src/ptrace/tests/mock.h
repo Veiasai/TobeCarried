@@ -5,7 +5,7 @@
 
 #include "../tracee.h"
 #include "../utils.h"
-
+#include "../report.h"
 
 namespace SAIL { namespace Test {
 
@@ -36,13 +36,21 @@ public:
 class MockRuleManager : public RuleManager
 {
 public:
-    MOCK_METHOD(std::vector<core::RuleCheckMsg>, check, (int syscallNumber, const core::SyscallParameter &sp), (override));
+    MOCK_METHOD(void, beforeTrap, (long tid, 
+        const core::Histories & history, 
+        core::RuleCheckMsgs & ruleCheckMsgs), (override));
+    MOCK_METHOD(void, afterTrap, (long tid, 
+        const core::Histories & history, 
+        core::RuleCheckMsgs & ruleCheckMsgs), (override));
+    MOCK_METHOD(void, event, (long tid, int status), (override));
+    MOCK_METHOD(void, end, (), (override));
 };
 
 class MockReport : public Report
 {
 public:
-    MOCK_METHOD(int, write, (const long tid, const long callID, const core::RuleCheckMsg &rcmsg), (override));
+    MOCK_METHOD(int, write, (const long tid, const core::RuleCheckMsg &rcmsg), (override));
+    MOCK_METHOD(int, write, (const long tid, const std::string &), (override));
     MOCK_METHOD(int, flush, (), (override));
     MOCK_METHOD(size_t, size, (), (override));
 };

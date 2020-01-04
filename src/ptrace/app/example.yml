@@ -1,11 +1,27 @@
-whitelist:
-
-blacklist:
+rules:
   - sysnum: 2
     id: 1
-    name: hello
-    level: 2
+    name: open
     specs:
       - paraIndex: 1
         action: matchRe
-        value: testFile
+        value: /dev/urandom
+  - sysnum: 0
+    id: 2
+    name: read
+    specs:
+      - paraIndex: 1
+        action: equal
+        value: 0
+
+plugins:
+  filewhitelist:
+    [a.txt, b.txt, /home/ubuntu/CTP/build/ptrace/app/testFile, /home/ubuntu/CTP/build/ptrace/app/logs/log.txt]
+
+  network:
+    addrbanned:
+      - 10.0.0.0
+      - 10.0.0.0
+    connection:
+      limit: 5
+
