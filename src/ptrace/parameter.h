@@ -17,7 +17,6 @@ enum ParameterIndex
     Fourth,
     Fifth,
     Sixth,
-    
 };
 
 enum ParameterType
@@ -54,11 +53,6 @@ struct Parameter
     }
 };
 
-struct SyscallParameter
-{
-    std::vector<Parameter> parameters;
-};
-
 struct RuleCheckMsg
 {
     bool approval;
@@ -81,8 +75,10 @@ struct WarnInfo {
     // e.g. vector<int> breakRules;  show the rules that be breaked;  
 };
 
-using Histories = std::vector<std::pair<Systemcall, SyscallParameter>>;
+using Parameters = std::vector<Parameter>;
+using Histories = std::vector<std::pair<Systemcall, Parameters>>;
 using RuleCheckMsgs = std::vector<RuleCheckMsg>;
+
 
 }}
 

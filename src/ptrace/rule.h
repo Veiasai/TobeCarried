@@ -8,27 +8,18 @@
 
 namespace SAIL { namespace rule {
 
-
-enum RuleLevel
-{
-    record = 1,
-    standard,
-    dangerous,
-};
-
 struct RuleInfo
 {
     int target_syscall;
     int ruleID;
     std::string name;
-    RuleLevel level;
 };
 
 class Rule
 {
 public:
     virtual ~Rule() {};
-    virtual core::RuleCheckMsg check(const core::SyscallParameter & sp) = 0;
+    virtual core::RuleCheckMsg check(const core::Parameters & sp) = 0;
     virtual RuleInfo info() = 0;
     virtual int matchRe(core::ParameterIndex idx, const std::string & re) = 0; // usually should be a pointer
     virtual int matchBytes(core::ParameterIndex idx, const std::vector<unsigned char> & vc) = 0; // usually should be a pointer
@@ -44,12 +35,11 @@ private:
     int ID;
     int target_syscall;
     std::string name;
-    RuleLevel level;
-    std::vector<std::function<int(const core::SyscallParameter & sp)>> rulevalues;
+    std::vector<std::function<bool(const core::Parameters & sp)>> rulevalues;
 public:
-    RuleImpl(int ID, int target_syscall, const std::string & name, RuleLevel level);
+    RuleImpl(int ID, int target_syscall, const std::string & name);
     virtual ~RuleImpl() {};
-    virtual core::RuleCheckMsg check(const core::SyscallParameter & sp) override;
+    virtual core::RuleCheckMsg check(const core::Parameters & sp) override;
     virtual RuleInfo info() override;
     virtual int matchRe(core::ParameterIndex idx, const std::string & re) override; // usually should be a pointer
     virtual int matchBytes(core::ParameterIndex idx, const std::vector<unsigned char> & vc) override; // usually should be a pointer

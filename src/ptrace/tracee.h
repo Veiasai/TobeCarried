@@ -31,8 +31,8 @@ private:
     long tid;
     long callID;    //  auto-increment ID for every call
     volatile bool iscalling;
-    std::vector<std::pair<Systemcall, SyscallParameter>> history;
-    std::vector<RuleCheckMsg> ruleCheckMsgs;
+    Histories history;
+    RuleCheckMsgs ruleCheckMsgs;
     std::shared_ptr<utils::Utils> up;
     std::shared_ptr<utils::CustomPtrace> cp;
     std::shared_ptr<rule::RuleManager> rulemgr;
@@ -42,7 +42,6 @@ private:
     char localFilename[MAX_FILENAME_SIZE];
     // for buffering syscall id to check whether syscall returns
     long lastSyscallID;
-    SyscallParameter syscallParams;
 
     // file
     void open();

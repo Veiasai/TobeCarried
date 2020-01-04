@@ -28,11 +28,10 @@ void YamlRuleManager::ruleInit(const YAML::Node &yaml)
     {
         int sysnum = (*ruleNode)["sysnum"].as<int>();
         int id = (*ruleNode)["id"].as<int>();
-        SAIL::rule::RuleLevel level = (SAIL::rule::RuleLevel)((*ruleNode)["level"].as<int>());
         std::string name = (*ruleNode)["name"].as<std::string>();
         const YAML::Node specs = (*ruleNode)["specs"];
-        // TODO: config level
-        std::unique_ptr<Rule> rule = std::make_unique<RuleImpl>(id, sysnum, name, level);
+
+        std::unique_ptr<Rule> rule = std::make_unique<RuleImpl>(id, sysnum, name);
         for (auto spec = specs.begin(); spec != specs.end(); spec++)
         {
             std::string action = (*spec)["action"].as<std::string>();
