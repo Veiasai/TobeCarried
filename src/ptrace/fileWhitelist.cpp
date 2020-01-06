@@ -45,7 +45,7 @@ void FileWhitelist::event(long tid, int status)
 void FileWhitelist::end()
 {
     // TODO: tid?
-    report->write(0, "filewhitelist check");
+    report->write(0, "Filewhitelist Check");
     for (auto it = files.begin(); it != files.end(); it++)
     {
         bool flag = false;
@@ -64,6 +64,7 @@ void FileWhitelist::end()
         else
             report->write(0, "[Fail] " + (*it));
     }
+    report->write(0, "Filewhitelist Check End");
 }
 
 
