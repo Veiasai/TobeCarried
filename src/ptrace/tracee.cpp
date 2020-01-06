@@ -404,8 +404,15 @@ void TraceeImpl::recvfrom()
         this->history.back().second[ParameterIndex::Fourth] = Parameter(flags);
 
         // TODO: if the pointer is not null
-        this->history.back().second[ParameterIndex::Fifth] = Parameter(0, 0);
-        this->history.back().second[ParameterIndex::Sixth] = Parameter(0, 0);
+        if (srcaddr == 0)
+        {
+            this->history.back().second[ParameterIndex::Fifth] = Parameter(0, 0);
+        }
+        else
+        {
+            
+        }
+        this->history.back().second[ParameterIndex::Sixth] = Parameter(addrlen);
     }
 }
 void TraceeImpl::sendto()
@@ -419,7 +426,7 @@ void TraceeImpl::sendto()
         const unsigned long buf = this->history.back().first.call_regs.rsi;
         const unsigned long len = this->history.back().first.call_regs.rdx;
         const unsigned long flags = this->history.back().first.call_regs.rcx;
-        const unsigned long srcaddr = this->history.back().first.call_regs.r8;
+        const unsigned long dstaddr = this->history.back().first.call_regs.r8;
         const unsigned long addrlen = this->history.back().first.call_regs.r9;
         
         this->history.back().second[ParameterIndex::First] = Parameter(sockfd);
@@ -430,8 +437,15 @@ void TraceeImpl::sendto()
         this->history.back().second[ParameterIndex::Fourth] = Parameter(flags);
 
         // TODO: if the pointer is not null
-        this->history.back().second[ParameterIndex::Fifth] = Parameter(0, 0);
-        this->history.back().second[ParameterIndex::Sixth] = Parameter(0, 0);
+        if (dstaddr == 0)
+        {
+            this->history.back().second[ParameterIndex::Fifth] = Parameter(0, 0);
+        }
+        else
+        {
+            
+        }
+        this->history.back().second[ParameterIndex::Sixth] = Parameter(addrlen);
     }
 }
 
