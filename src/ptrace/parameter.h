@@ -30,27 +30,11 @@ struct Parameter
 {
     ParameterType type;
     long size;  // size of object pointed
-    union 
-    {
-        void * p;
-        long value;
-    } value;
+    long value;
 
-    Parameter() {
-        type = ParameterType::null;
-    }
-
-    Parameter(ParameterType ftype, long fsize, void *fp, long fvalue) {
-        if (ftype == pointer) {
-            type = pointer;
-            size = fsize;
-            value.p = fp;
-        }
-        else {
-            type = nonpointer;
-            value.value = fvalue;
-        }
-    }
+    Parameter() : type(ParameterType::null) {}
+    Parameter(long value) : type(ParameterType::nonpointer), size(0), value(value) {}
+    Parameter(long size, long value) : type(ParameterType::pointer), size(size), value(value) {}
 };
 
 struct RuleCheckMsg

@@ -25,9 +25,9 @@ core::RuleCheckMsg RuleImpl::check(const core::Parameters &sp)
         sp[core::ParameterIndex::Fifth].type,
         sp[core::ParameterIndex::Sixth].type);
 
-    for (const auto &f : rulevalues)
+    for (const auto &rulevalue : rulevalues)
     {
-        if (f(sp))
+        if (rulevalue(sp))
         {
             rcm.approval = false;
 
@@ -50,7 +50,7 @@ int RuleImpl::matchRe(core::ParameterIndex idx, const std::string &re)
     const std::regex pattern(re);
 
     rulevalues.emplace_back([idx, pattern](const core::Parameters &sp) -> bool {
-        return std::regex_match((char *)(sp[idx].value.p), pattern);
+        return std::regex_match((char *)(sp[idx].value), pattern);
     });
     return 0;
 };
@@ -58,7 +58,7 @@ int RuleImpl::matchRe(core::ParameterIndex idx, const std::string &re)
 int RuleImpl::matchBytes(core::ParameterIndex idx, const std::vector<unsigned char> &vc)
 {
     rulevalues.emplace_back([idx, vc](const core::Parameters &sp) -> bool {
-        char *str = (char *)sp[idx].value.p;
+        char *str = (char *)sp[idx].value;
         long spsize = sp[idx].size;
         bool matched = false;
 
@@ -90,7 +90,7 @@ int RuleImpl::matchBytes(core::ParameterIndex idx, const std::vector<unsigned ch
 int RuleImpl::equal(core::ParameterIndex idx, long value)
 {
     rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> bool {
-        return (sp[idx].value.value == value);
+        return (sp[idx].value == value);
     });
     return 0;
 };
@@ -98,7 +98,7 @@ int RuleImpl::equal(core::ParameterIndex idx, long value)
 int RuleImpl::notEqual(core::ParameterIndex idx, long value)
 {
     rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> bool {
-        return (sp[idx].value.value != value);
+        return (sp[idx].value != value);
     });
     return 0;
 };
@@ -106,7 +106,7 @@ int RuleImpl::notEqual(core::ParameterIndex idx, long value)
 int RuleImpl::greater(core::ParameterIndex idx, long value)
 {
     rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> bool {
-        return (sp[idx].value.value > value);
+        return (sp[idx].value > value);
     });
     return 0;
 };
@@ -114,7 +114,7 @@ int RuleImpl::greater(core::ParameterIndex idx, long value)
 int RuleImpl::notGreater(core::ParameterIndex idx, long value)
 {
     rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> bool {
-        return (sp[idx].value.value <= value);
+        return (sp[idx].value <= value);
     });
     return 0;
 };

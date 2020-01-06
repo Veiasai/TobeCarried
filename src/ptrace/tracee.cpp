@@ -133,7 +133,7 @@ void TraceeImpl::uname()
         std::string a = "{sysname:" + sysname + " nodename: " + nodename + "...}";
         char *para1 = (char *)(a.c_str());
 
-        this->history.back().second[ParameterIndex::First] = Parameter(pointer, MAX_FILENAME_SIZE, para1, 0);
+        this->history.back().second[ParameterIndex::First] = Parameter(MAX_FILENAME_SIZE, reinterpret_cast<long>(para1));
         spdlog::debug("[tid: {}] uname: utsname: {}", tid, a);
     }
 }
@@ -147,7 +147,7 @@ void TraceeImpl::sysExecve()
         assert(filename);
 
         this->up->readStrFrom(this->tid, filename, this->localFilename, MAX_FILENAME_SIZE);
-        this->history.back().second[ParameterIndex::First] = Parameter(pointer, MAX_FILENAME_SIZE, this->localFilename, 0);
+        this->history.back().second[ParameterIndex::First] = Parameter(MAX_FILENAME_SIZE, reinterpret_cast<long>(this->localFilename));
         spdlog::debug("[tid: {}] execve: filename: {}", tid, this->localFilename);
 
         char **paras = (char **)(this->history.back().first.call_regs.rsi);
@@ -172,7 +172,7 @@ void TraceeImpl::sysExecve()
 
         char *passargvs = (char *)argvs.data();
 
-        this->history.back().second[ParameterIndex::Second] = Parameter(pointer, MAX_FILENAME_SIZE, passargvs, 0);
+        this->history.back().second[ParameterIndex::Second] = Parameter(MAX_FILENAME_SIZE, reinterpret_cast<long>(passargvs));
         spdlog::debug("[tid: {}] execve: argv: {}", tid, passargvs);
     }
     else
@@ -183,7 +183,6 @@ void TraceeImpl::sysExecve()
 // file
 void TraceeImpl::open()
 {
-    // fd 0, 1, 2 never be opened, handle specially in constructor
     if (this->iscalling)
     {
         // filename is address in target program memory space
@@ -193,17 +192,17 @@ void TraceeImpl::open()
         assert(filename);
 
         this->up->readStrFrom(this->tid, filename, this->localFilename, MAX_FILENAME_SIZE);
-        this->history.back().second[ParameterIndex::First] = Parameter(pointer, MAX_FILENAME_SIZE, this->localFilename, 0);
+        this->history.back().second[ParameterIndex::First] = Parameter(MAX_FILENAME_SIZE, reinterpret_cast<long>(this->localFilename));
 
         const int flags = (int)this->history.back().first.call_regs.rsi;
-        this->history.back().second[ParameterIndex::Second] = Parameter(nonpointer, 0, NULL, flags);
+        this->history.back().second[ParameterIndex::Second] = Parameter(flags);
 
         spdlog::debug("[tid: {}] Open: filename: {}", tid, this->localFilename);
     }
     else
     {
         const unsigned long long fd = this->history.back().first.ret_regs.rax;
-        this->history.back().second[ParameterIndex::Ret] = Parameter(nonpointer, 0, NULL, fd);
+        this->history.back().second[ParameterIndex::Ret] = Parameter(fd);
     }
 }
 void TraceeImpl::openat()
@@ -219,20 +218,20 @@ void TraceeImpl::openat()
     if (this->iscalling)
     {
         const int dirfd = (int)this->history.back().first.call_regs.rdi;
-        this->history.back().second[ParameterIndex::First] = Parameter(nonpointer, 0, NULL, dirfd);
+        this->history.back().second[ParameterIndex::First] = Parameter(dirfd);
 
         const char *pathname = (char *)this->history.back().first.call_regs.rsi;
         this->up->readStrFrom(this->tid, pathname, this->localFilename, MAX_FILENAME_SIZE);
-        this->history.back().second[ParameterIndex::Second] = Parameter(pointer, MAX_FILENAME_SIZE, this->localFilename, 0);
+        this->history.back().second[ParameterIndex::Second] = Parameter(MAX_FILENAME_SIZE, reinterpret_cast<long>(this->localFilename));
 
         const int flags = (int)this->history.back().first.call_regs.rdx;
-        this->history.back().second[ParameterIndex::Third] = Parameter(nonpointer, 0, NULL, flags);
+        this->history.back().second[ParameterIndex::Third] = Parameter(flags);
         spdlog::debug("[tid: {}] Openat: dirfd: {}  filename: {}", tid, dirfd, this->localFilename);
     }
     else
     {
         const int ret = (int)this->history.back().first.ret_regs.rax;
-        this->history.back().second[ParameterIndex::Ret] = Parameter(nonpointer, 0, NULL, ret);
+        this->history.back().second[ParameterIndex::Ret] = Parameter(ret);
     }
 }
 void TraceeImpl::ioctl()
@@ -247,11 +246,11 @@ void TraceeImpl::ioctl()
     {
         const int fd = (int)this->history.back().first.call_regs.rdi;
         spdlog::debug("[tid: {}] ioctl Call: fd: {}", tid, fd);
-        this->history.back().second[ParameterIndex::First] = Parameter(nonpointer, 0, NULL, fd);
+        this->history.back().second[ParameterIndex::First] = Parameter(fd);
 
         const unsigned long int cmd = (unsigned long int)this->history.back().first.call_regs.rsi;
         spdlog::debug("[tid: {}] ioctl Call: cmd: 0x{:x}", tid, cmd);
-        this->history.back().second[ParameterIndex::Second] = Parameter(nonpointer, 0, NULL, cmd);
+        this->history.back().second[ParameterIndex::Second] = Parameter(cmd);
 
         switch (cmd)
         {
@@ -271,7 +270,7 @@ void TraceeImpl::ioctl()
     else
     {
         const int ret = (int)this->history.back().first.ret_regs.rax;
-        this->history.back().second[ParameterIndex::Ret] = Parameter(nonpointer, 0, NULL, ret);
+        this->history.back().second[ParameterIndex::Ret] = Parameter(ret);
     }
 }
 void TraceeImpl::read()
@@ -279,7 +278,7 @@ void TraceeImpl::read()
     if (this->iscalling)
     {
         const int fd = (int)this->history.back().first.call_regs.rdi;
-        this->history.back().second[ParameterIndex::First] = Parameter(nonpointer, 0, NULL, fd);
+        this->history.back().second[ParameterIndex::First] = Parameter(fd);
         spdlog::debug("[tid: {}] Read Call: fd: {}", tid, fd);
 
         std::string filename;
@@ -293,7 +292,7 @@ void TraceeImpl::read()
     {
         // rax can be -1, but std::min required two args with the same type
         const int size = this->history.back().first.ret_regs.rax;
-        this->history.back().second[ParameterIndex::Ret] = Parameter(nonpointer, 0, NULL, size);
+        this->history.back().second[ParameterIndex::Ret] = Parameter(size);
         if (size < 0)
         {
             spdlog::debug("[tid: {}] Read Ret less than 0", tid);
@@ -303,7 +302,7 @@ void TraceeImpl::read()
         char localBuf[MAX_READ_SIZE];
         spdlog::debug("[tid: {}] Read Ret: size: {}", tid, size);
         this->up->readBytesFrom(this->tid, buf, localBuf, std::min(size, MAX_READ_SIZE));
-        this->history.back().second[ParameterIndex::Second] = Parameter(pointer, size, localBuf, 0);
+        this->history.back().second[ParameterIndex::Second] = Parameter(size, reinterpret_cast<long>(localBuf));
 
         spdlog::debug("[tid: {}] Read Ret: content: {}", tid, localBuf);
     }
@@ -313,7 +312,7 @@ void TraceeImpl::write()
     if (this->iscalling)
     {
         const int fd = (int)this->history.back().first.call_regs.rdi;
-        this->history.back().second[ParameterIndex::First] = Parameter(nonpointer, 0, NULL, fd);
+        this->history.back().second[ParameterIndex::First] = Parameter(fd);
         spdlog::debug("[tid: {}] Write Call: fd: {}", tid, fd);
 
         std::string filename;
@@ -330,7 +329,7 @@ void TraceeImpl::write()
     else
     {
         const int size = this->history.back().first.ret_regs.rax;
-        this->history.back().second[ParameterIndex::Ret] = Parameter(nonpointer, 0, NULL, size);
+        this->history.back().second[ParameterIndex::Ret] = Parameter(size);
         if (size < 0)
         {
             spdlog::debug("[tid: {}] Write Ret less than 0", tid);
@@ -340,7 +339,7 @@ void TraceeImpl::write()
         char localBuf[MAX_READ_SIZE];
         spdlog::debug("[tid: {}] Write Ret: size: {}", tid, size);
         this->up->readBytesFrom(this->tid, buf, localBuf, std::min(size, MAX_READ_SIZE));
-        this->history.back().second[ParameterIndex::Second] = Parameter(pointer, size, localBuf, 0);
+        this->history.back().second[ParameterIndex::Second] = Parameter(size, reinterpret_cast<long>(localBuf));
 
         spdlog::debug("[tid: {}] Write Ret: content: {}", tid, localBuf);
         // size of pointer: actual size or required count ?
@@ -353,13 +352,13 @@ void TraceeImpl::socket()
     if (this->iscalling)
     {
         const unsigned long domain = this->history.back().first.call_regs.rdi;
-        this->history.back().second[ParameterIndex::First] = Parameter(nonpointer, 0, NULL, domain);
+        this->history.back().second[ParameterIndex::First] = Parameter(domain);
 
         const unsigned long type = this->history.back().first.call_regs.rsi;
-        this->history.back().second[ParameterIndex::Second] = Parameter(nonpointer, 0, NULL, type);
+        this->history.back().second[ParameterIndex::Second] = Parameter(type);
 
         const unsigned long protocol = this->history.back().first.call_regs.rdx;
-        this->history.back().second[ParameterIndex::Third] = Parameter(nonpointer, 0, NULL, protocol);
+        this->history.back().second[ParameterIndex::Third] = Parameter(protocol);
 
         spdlog::debug("[tid: {}] Socket Call: arg: [{}, {}, {}]", tid, domain, type, protocol);
     }
@@ -370,23 +369,70 @@ void TraceeImpl::connect()
     if (this->iscalling)
     {
         const unsigned long sockfd = this->history.back().first.call_regs.rdi;
-        this->history.back().second[ParameterIndex::First] = Parameter(nonpointer, 0, NULL, sockfd);
-
         const unsigned long sockaddr = this->history.back().first.call_regs.rsi;
         const unsigned long addrlen = this->history.back().first.call_regs.rdx;
+
         char * fp = new char[addrlen];
         this->up->readBytesFrom(this->tid, reinterpret_cast<char *>(sockaddr), fp, addrlen);
-        this->history.back().second[ParameterIndex::Second] = Parameter(pointer, addrlen, fp, sockaddr);
-        this->history.back().second[ParameterIndex::Third] = Parameter(nonpointer, 0, NULL, addrlen);
+        
+        this->history.back().second[ParameterIndex::First] = Parameter(sockfd);
+        this->history.back().second[ParameterIndex::Second] = Parameter(addrlen, reinterpret_cast<long>(fp));
+        this->history.back().second[ParameterIndex::Third] = Parameter(addrlen);
 
         spdlog::debug("[tid: {}] Connect Call: arg: [{}, {}, {}]", tid, sockfd, sockaddr, addrlen);
     }
 }
 void TraceeImpl::recvfrom()
 {
+    if (this->iscalling)
+    {
+    }
+    else
+    {
+        const unsigned long sockfd = this->history.back().first.call_regs.rdi;
+        const unsigned long buf = this->history.back().first.call_regs.rsi;
+        const unsigned long len = this->history.back().first.call_regs.rdx;
+        const unsigned long flags = this->history.back().first.call_regs.rcx;
+        const unsigned long srcaddr = this->history.back().first.call_regs.r8;
+        const unsigned long addrlen = this->history.back().first.call_regs.r9;
+        
+        this->history.back().second[ParameterIndex::First] = Parameter(sockfd);
+        char * fp = new char[len];
+        this->up->readBytesFrom(this->tid, reinterpret_cast<char *>(buf), fp, len);
+        this->history.back().second[ParameterIndex::Second] = Parameter(len, reinterpret_cast<long>(fp));
+        this->history.back().second[ParameterIndex::Third] = Parameter(len);
+        this->history.back().second[ParameterIndex::Fourth] = Parameter(flags);
+
+        // TODO: if the pointer is not null
+        this->history.back().second[ParameterIndex::Fifth] = Parameter(0, 0);
+        this->history.back().second[ParameterIndex::Sixth] = Parameter(0, 0);
+    }
 }
 void TraceeImpl::sendto()
 {
+    if (this->iscalling)
+    {
+    }
+    else
+    {
+        const unsigned long sockfd = this->history.back().first.call_regs.rdi;
+        const unsigned long buf = this->history.back().first.call_regs.rsi;
+        const unsigned long len = this->history.back().first.call_regs.rdx;
+        const unsigned long flags = this->history.back().first.call_regs.rcx;
+        const unsigned long srcaddr = this->history.back().first.call_regs.r8;
+        const unsigned long addrlen = this->history.back().first.call_regs.r9;
+        
+        this->history.back().second[ParameterIndex::First] = Parameter(sockfd);
+        char * fp = new char[len];
+        this->up->readBytesFrom(this->tid, reinterpret_cast<char *>(buf), fp, len);
+        this->history.back().second[ParameterIndex::Second] = Parameter(len, reinterpret_cast<long>(fp));
+        this->history.back().second[ParameterIndex::Third] = Parameter(len);
+        this->history.back().second[ParameterIndex::Fourth] = Parameter(flags);
+
+        // TODO: if the pointer is not null
+        this->history.back().second[ParameterIndex::Fifth] = Parameter(0, 0);
+        this->history.back().second[ParameterIndex::Sixth] = Parameter(0, 0);
+    }
 }
 
 // clone

@@ -19,9 +19,9 @@ plugins:
     [a.txt, b.txt, /home/ubuntu/CTP/build/ptrace/app/testFile, /home/ubuntu/CTP/build/ptrace/app/logs/log.txt]
 
   network:
-    addrbanned:
+    ipv4:
       - 10.0.0.0
-      - 10.0.0.0
+      - 10.0.5.0
     connection:
       limit: 5
 
