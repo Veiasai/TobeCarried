@@ -35,19 +35,16 @@ TEST_F(RuleFixture, match_bytes_in_open_filename)
 {
     int ID = 1;
     const std::string name = "equal";
-    RuleImpl rule(ID, SYS_open, name, RuleLevel::record);
+    RuleImpl rule(ID, SYS_open, name);
     std::vector<unsigned char> bytes;
     std::string fileName = "/proc";
     char fileNameBuf[] = "/proc";
     bytes.insert(bytes.end(), fileName.begin(), fileName.end());
 
     rule.matchBytes(ParameterIndex::First, bytes);
-
-    SyscallParameter sp;
-    sp.parameters.resize(7);
-    sp.parameters[ParameterIndex::First].type = ParameterType::pointer;
-    sp.parameters[ParameterIndex::First].size = bytes.size();
-    sp.parameters[ParameterIndex::First].value.p = reinterpret_cast<void*>(fileNameBuf);
+    Parameters sp;
+    sp.resize(7);
+    sp[ParameterIndex::First] = Parameter(bytes.size(), reinterpret_cast<long>(fileNameBuf));
     RuleCheckMsg msg = rule.check(sp);
 
     EXPECT_EQ(msg.approval, false);
