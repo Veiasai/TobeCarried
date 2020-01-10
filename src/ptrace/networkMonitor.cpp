@@ -83,7 +83,12 @@ void NetworkMonitor::checkIPV4()
         if (ipv4WhiteList.find(ipv4) == ipv4WhiteList.end())
         {
             inet_ntop(AF_INET, &(ipv4), addrBuf, INET_ADDRSTRLEN);
-            this->report->write(0, "Not permitted ipv4: " + std::string(addrBuf));
+            this->report->write(0, "[Fail] Not permitted ipv4: " + std::string(addrBuf));
+        }
+        else
+        {
+            inet_ntop(AF_INET, &(ipv4), addrBuf, INET_ADDRSTRLEN);
+            this->report->write(0, "[Pass] Permitted ipv4: " + std::string(addrBuf));
         }
     }
     this->report->write(0, "NetworkMonitor Check End");
