@@ -75,6 +75,7 @@ void NetworkMonitor::end()
 
 void NetworkMonitor::checkIPV4()
 {
+    this->report->write(0, "");
     this->report->write(0, "NetworkMonitor Check");
     char addrBuf[20];
     for (const auto ipv4 : ipv4Used)

@@ -33,7 +33,7 @@ int ReportImpl::write(const long tid, const core::RuleCheckMsg &rcmsg)
     // TODO: separated files?
     std::string approval = (rcmsg.approval) ? "pass" : "warning";
 
-    fs << tid << "," << rcmsg.ruleID << "," << approval << "," << rcmsg.msg << std::endl;
+    fs << approval << "\ttid: " << tid << "\truleId: " << rcmsg.ruleID << "\tmsg: \"" << rcmsg.msg << "\"" << std::endl;
 
     return 0;
 }
