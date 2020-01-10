@@ -14,7 +14,7 @@ RuleImpl::RuleImpl(int ID, int target_syscall, const std::string &name)
 
 core::RuleCheckMsg RuleImpl::check(const core::Parameters &sp)
 {
-    core::RuleCheckMsg rcm = {true, ID, ""};
+    core::RuleCheckMsg rcm = {true, ID, name, ""};
     spdlog::debug("rule {}:  ret {}, p1 {}, p2 {}, p3 {}, p4 {}, p5 {}, p6 {}", 
         ID, 
         sp[core::ParameterIndex::Ret].type,
