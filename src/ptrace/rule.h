@@ -27,6 +27,8 @@ public:
     virtual int notEqual(core::ParameterIndex idx, long value) = 0;
     virtual int greater(core::ParameterIndex idx, long value) = 0;
     virtual int notGreater(core::ParameterIndex idx, long value) = 0;
+    virtual int less(core::ParameterIndex idx, long value) = 0;
+    virtual int notLess(core::ParameterIndex idx, long value) = 0;
 };
 
 class RuleImpl : public Rule
@@ -47,6 +49,8 @@ public:
     virtual int notEqual(core::ParameterIndex idx, long value) override;
     virtual int greater(core::ParameterIndex idx, long value) override;
     virtual int notGreater(core::ParameterIndex idx, long value) override;
+    virtual int less(core::ParameterIndex idx, long value) override;
+    virtual int notLess(core::ParameterIndex idx, long value) override;
 };
 
 }}

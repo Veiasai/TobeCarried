@@ -119,5 +119,21 @@ int RuleImpl::notGreater(core::ParameterIndex idx, long value)
     return 0;
 };
 
+int RuleImpl::less(core::ParameterIndex idx, long value)
+{
+    rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> bool {
+        return (sp[idx].value < value);
+    });
+    return 0;
+};
+
+int RuleImpl::notLess(core::ParameterIndex idx, long value)
+{
+    rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> bool {
+        return (sp[idx].value >= value);
+    });
+    return 0;
+};
+
 } // namespace rule
 } // namespace SAIL

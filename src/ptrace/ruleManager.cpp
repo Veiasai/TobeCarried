@@ -66,6 +66,14 @@ void YamlRuleManager::ruleInit(const YAML::Node &yaml)
             {
                 rule->notGreater(idx, (*spec)["value"].as<long>());
             }
+            else if (action == "less")
+            {
+                rule->less(idx, (*spec)["value"].as<long>());
+            }
+            else if (action == "notLess")
+            {
+                rule->notLess(idx, (*spec)["value"].as<long>());
+            }
             // TODO: more actions
         }
         // add the rule to the map
