@@ -31,6 +31,7 @@ public:
     MOCK_METHOD(int, getFilenameByFd, (int tid, int fd, std::string &filename), (override));
     MOCK_METHOD(int, getFilenamesByProc, (int tid,std::set<std::string> &fileset), (override));
     MOCK_METHOD(int, strset2file, (const std::string &filename, const std::set<std::string> &fileset), (override));
+    MOCK_METHOD(int, handleEscape, (const std::string &str, std::string &regStr), (override));
 };
 
 class MockRuleManager : public RuleManager
@@ -51,6 +52,7 @@ class MockReport : public Report
 public:
     MOCK_METHOD(int, write, (const long tid, const core::RuleCheckMsg &rcmsg), (override));
     MOCK_METHOD(int, write, (const long tid, const std::string &), (override));
+    MOCK_METHOD(int, analyze, (const std::string &key, const YAML::Node &node), (override));
     MOCK_METHOD(int, flush, (), (override));
     MOCK_METHOD(size_t, size, (), (override));
 };
