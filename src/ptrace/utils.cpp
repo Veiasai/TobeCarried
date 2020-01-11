@@ -136,6 +136,39 @@ int UtilsImpl::strset2file(const std::string &filename, const std::set<std::stri
     return 0;
 }
 
+int UtilsImpl::handleEscape(const std::string &str, std::string &regStr)
+{
+    for (int i = 0; i < str.size(); i++)
+    {
+        switch (str[i]) {
+            case '.':
+                regStr.append("\\.");
+                break;
+            case '^':
+                regStr.append("\\^");
+                break;
+            case '$':
+                regStr.append("\\$");
+                break;
+            case '*':
+                regStr.append("\\*");
+                break;
+            case '+':
+                regStr.append("\\+");
+                break;
+            case '?':
+                regStr.append("\\?");
+                break;
+            case '\\':
+                regStr.append("\\\\");
+                break;
+            default:
+                regStr.push_back(str[i]);
+        }
+    }
+    return 0;
+}
+
 long CustomPtraceImpl::peekUser(int tid, long addr)
 {
     return ptrace(PTRACE_PEEKUSER, tid, addr, NULL);

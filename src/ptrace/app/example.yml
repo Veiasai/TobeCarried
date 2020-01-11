@@ -16,7 +16,11 @@ rules:
 
 plugins:
   filewhitelist:
-    [a.txt, b.txt, /home/ubuntu/CTP/build/ptrace/app/testFile, /home/ubuntu/CTP/build/ptrace/app/logs/log.txt]
+    - a.txt
+    - b.txt
+    - /home/ubuntu/CTP/build/ptrace/app/testFile
+    - /home/ubuntu/CTP/build/ptrace/app/logs/log.txt
+    - /lib/x86_64-linux-gnu/libc-2.23.so
 
   network:
     ipv4:

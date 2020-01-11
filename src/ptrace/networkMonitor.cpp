@@ -75,19 +75,31 @@ void NetworkMonitor::end()
 
 void NetworkMonitor::checkIPV4()
 {
+    this->report->write(0, "");
     this->report->write(0, "NetworkMonitor Check");
+    YAML::Node node;
     char addrBuf[20];
     for (const auto ipv4 : ipv4Used)
     {
+        // output to report
         if (ipv4WhiteList.find(ipv4) == ipv4WhiteList.end())
         {
             inet_ntop(AF_INET, &(ipv4), addrBuf, INET_ADDRSTRLEN);
-            this->report->write(0, "Not permitted ipv4: " + std::string(addrBuf));
+            this->report->write(0, "[Fail] Not permitted ipv4: " + std::string(addrBuf));
         }
-    }
-    this->report->write(0, "NetworkMonitor Check End");
-}
+        else
+        {
+            inet_ntop(AF_INET, &(ipv4), addrBuf, INET_ADDRSTRLEN);
+            this->report->write(0, "[Pass] Permitted ipv4: " + std::string(addrBuf));
+        }
 
+        // build yaml node
+        node["ipv4"].push_back(std::string(addrBuf));
+    }
+
+    this->report->write(0, "NetworkMonitor Check End");
+    this->report->analyze("network", node);
+}
 
 } // namespace core
 } // namespace SAIL

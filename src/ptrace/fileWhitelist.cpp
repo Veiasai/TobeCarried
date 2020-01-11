@@ -45,9 +45,16 @@ void FileWhitelist::event(long tid, int status)
 void FileWhitelist::end()
 {
     // TODO: tid?
+    report->write(0, "");
     report->write(0, "Filewhitelist Check");
+    YAML::Node node;
     for (auto it = files.begin(); it != files.end(); it++)
     {
+        // ignore pipe and socket
+        if (it->find("pipe:[") == 0 || it->find("socket:[") == 0) {
+            continue;
+        }
+
         bool flag = false;
         for (auto rule : whitelist_patterns)
         {
@@ -59,14 +66,21 @@ void FileWhitelist::end()
             }
         }
 
+        // output to report
         if (flag)
             report->write(0, "[Pass] " + (*it));
         else
             report->write(0, "[Fail] " + (*it));
+
+        // build yaml node
+        std::string regStr;
+        // filewhitelist in configuration is of regex format so + should be \+ actually, etc. 
+        this->up->handleEscape(*it, regStr);
+        node.push_back(regStr);
     }
     report->write(0, "Filewhitelist Check End");
+    report->analyze("filewhitelist", node);
 }
-
 
 } // namespace core
 } // namespace SAIL
