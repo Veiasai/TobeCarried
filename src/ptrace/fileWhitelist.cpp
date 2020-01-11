@@ -68,7 +68,10 @@ void FileWhitelist::end()
             report->write(0, "[Fail] " + (*it));
 
         // build yaml node
-        node.push_back((*it));
+        std::string regStr;
+        // filewhitelist in configuration is of regex format so + should be \+ actually, etc. 
+        this->up->handleEscape(*it, regStr);
+        node.push_back(regStr);
     }
     report->write(0, "Filewhitelist Check End");
     report->analyze("filewhitelist", node);
