@@ -96,22 +96,36 @@ int main(int argc,char **argv){
     ("f,file", "the file you want to check", cxxopts::value<std::string>())
     ("d,childlog", "target output file path", cxxopts::value<std::string>())
     ("c,config", "config file path", cxxopts::value<std::string>())
-    ("a,args", "pass args to child, format like --a=a1,a2,a3", cxxopts::value<std::vector<std::string>>())
+    ("args", "pass args to child, format like --args=a1,a2,a3", cxxopts::value<std::vector<std::string>>())
     ("r,report", "report file path", cxxopts::value<std::string>())
+    ("a,analyze", "analyze target and generate a configuration yaml", cxxopts::value<std::string>())
     ;
     try {
         auto result = options.parse(argc, argv);
 
         initLogger(result["l"].as<std::string>(), result["o"].as<std::string>());
-        int rootTracee = startChild(result["f"].as<std::string>(), result["a"].as<std::vector<std::string>>(), result["d"].as<std::string>());
+        int rootTracee = startChild(result["f"].as<std::string>(), result["args"].as<std::vector<std::string>>(), result["d"].as<std::string>());
 
         YAML::Node config = YAML::LoadFile(result["c"].as<std::string>());
 
         std::shared_ptr<utils::CustomPtrace> cp = std::make_shared<utils::CustomPtraceImpl>();
         std::shared_ptr<utils::Utils> up = std::make_shared<utils::UtilsImpl>(cp);
-        std::shared_ptr<core::Report> report = std::make_shared<core::ReportImpl>(result["r"].as<std::string>());
+
+        std::string analFilename;
+        try {
+            analFilename = result["a"].as<std::string>();
+        }
+        catch (std::exception & e) {
+            analFilename = "";
+        }
+
+        std::shared_ptr<core::Report> report;
+        if (analFilename == "")
+            report = std::make_shared<core::ReportImpl>(result["r"].as<std::string>());
+        else
+            report = std::make_shared<core::ReportImpl>(result["r"].as<std::string>(), analFilename);
         std::shared_ptr<rule::RuleManager> ymlmgr = std::make_shared<SAIL::rule::YamlRuleManager>(config, up, report);
-        
+
         tracer = std::make_unique<core::Tracer>(up, cp, ymlmgr, report, rootTracee);
         signal(SIGINT, INThandler);
         tracer->run();

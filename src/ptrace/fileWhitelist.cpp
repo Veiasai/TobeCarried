@@ -47,6 +47,7 @@ void FileWhitelist::end()
     // TODO: tid?
     report->write(0, "");
     report->write(0, "Filewhitelist Check");
+    YAML::Node node;
     for (auto it = files.begin(); it != files.end(); it++)
     {
         bool flag = false;
@@ -60,14 +61,18 @@ void FileWhitelist::end()
             }
         }
 
+        // output to report
         if (flag)
             report->write(0, "[Pass] " + (*it));
         else
             report->write(0, "[Fail] " + (*it));
+
+        // build yaml node
+        node.push_back((*it));
     }
     report->write(0, "Filewhitelist Check End");
+    report->analyze("filewhitelist", node);
 }
-
 
 } // namespace core
 } // namespace SAIL
