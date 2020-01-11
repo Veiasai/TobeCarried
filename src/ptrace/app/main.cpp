@@ -102,8 +102,14 @@ int main(int argc,char **argv){
     ;
     try {
         auto result = options.parse(argc, argv);
-
-        initLogger(result["l"].as<std::string>(), result["o"].as<std::string>());
+        try {
+            std::string level = result["l"].as<std::string>();
+            std::string logFile = result["o"].as<std::string>();
+            initLogger(level, logFile);
+        }
+        catch (std::exception & e) {
+            initLogger("debug", "/dev/null");
+        }
         int rootTracee = startChild(result["f"].as<std::string>(), result["args"].as<std::vector<std::string>>(), result["d"].as<std::string>());
 
         YAML::Node config = YAML::LoadFile(result["c"].as<std::string>());
