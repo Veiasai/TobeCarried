@@ -55,7 +55,7 @@ int startChild(const std::string & target, const std::vector<std::string> & args
         char ** command = &cargs[0];
 
         if (!childLog.empty()) {
-            int childLogFd = open(childLog.c_str(), O_CREAT | O_APPEND, 0666);
+            int childLogFd = open(childLog.c_str(), O_RDWR | O_CREAT | O_APPEND, 0666);
             assert(childLogFd > 0);
             dup2(childLogFd, 1);
             dup2(childLogFd, 2);
