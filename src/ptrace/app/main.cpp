@@ -53,10 +53,14 @@ int startChild(const std::string & target, const std::vector<std::string> & args
         }
         cargs.push_back(nullptr);
         char ** command = &cargs[0];
-        int childLogFd = open(childLog.c_str(), O_CREAT | O_APPEND, 0666);
-        assert(childLogFd > 0);
-        dup2(childLogFd, 1);
-        dup2(childLogFd, 2);
+
+        if (!childLog.empty()) {
+            int childLogFd = open(childLog.c_str(), O_RDWR | O_CREAT | O_APPEND, 0666);
+            assert(childLogFd > 0);
+            dup2(childLogFd, 1);
+            dup2(childLogFd, 2);
+        }
+        
         ptrace(PTRACE_TRACEME, 0, NULL, NULL);
         kill(getpid(), SIGSTOP);
         execv(target.c_str(), command);
@@ -103,24 +107,49 @@ int main(int argc,char **argv){
     try {
         auto result = options.parse(argc, argv);
 
-        initLogger(result["l"].as<std::string>(), result["o"].as<std::string>());
-        int rootTracee = startChild(result["f"].as<std::string>(), result["args"].as<std::vector<std::string>>(), result["d"].as<std::string>());
+        // -l, -o, both optional
+        try {
+            std::string level = result["l"].as<std::string>();
+            std::string logFile = result["o"].as<std::string>();
+            initLogger(level, logFile);
+        }
+        catch (std::exception & e) {
+            initLogger("debug", "/dev/null");
+        }
 
+        // --args, optional
+        std::vector<std::string> args;
+        try {
+            args = result["args"].as<std::vector<std::string>>();
+        }
+        catch (std::exception & e) {}
+
+        // -d, optional
+        std::string childLog;
+        try {
+            childLog = result["d"].as<std::string>();
+        }
+        catch (std::exception & e) {}
+        
+        // -f, mandatory
+        int rootTracee = startChild(result["f"].as<std::string>(), args, childLog);
+
+        // -c, mandatory
         YAML::Node config = YAML::LoadFile(result["c"].as<std::string>());
 
         std::shared_ptr<utils::CustomPtrace> cp = std::make_shared<utils::CustomPtraceImpl>();
         std::shared_ptr<utils::Utils> up = std::make_shared<utils::UtilsImpl>(cp);
 
+        // -a, optional
         std::string analFilename;
         try {
             analFilename = result["a"].as<std::string>();
         }
-        catch (std::exception & e) {
-            analFilename = "";
-        }
+        catch (std::exception & e) {}
 
+        // -r mandatory
         std::shared_ptr<core::Report> report;
-        if (analFilename == "")
+        if (analFilename.empty())
             report = std::make_shared<core::ReportImpl>(result["r"].as<std::string>());
         else
             report = std::make_shared<core::ReportImpl>(result["r"].as<std::string>(), analFilename);
