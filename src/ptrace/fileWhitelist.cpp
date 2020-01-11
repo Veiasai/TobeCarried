@@ -50,6 +50,11 @@ void FileWhitelist::end()
     YAML::Node node;
     for (auto it = files.begin(); it != files.end(); it++)
     {
+        // ignore pipe and socket
+        if (it->find("pipe:[") == 0 || it->find("socket:[") == 0) {
+            continue;
+        }
+
         bool flag = false;
         for (auto rule : whitelist_patterns)
         {
