@@ -41,6 +41,7 @@ struct RuleCheckMsg
 {
     bool approval;
     int ruleID;
+    std::string ruleName;
     std::string msg;
 };
 

@@ -47,9 +47,14 @@ size_t ReportImpl::size()
 int ReportImpl::write(const long tid, const core::RuleCheckMsg &rcmsg)
 {
     // TODO: separated files?
-    std::string approval = (rcmsg.approval) ? "pass" : "warning";
+    std::string approval = (rcmsg.approval) ? "Pass" : "Fail";
 
-    fs << approval << "\ttid: " << tid << "\truleId: " << rcmsg.ruleID << "\tmsg: \"" << rcmsg.msg << "\"" << std::endl;
+    fs << "[" << approval << "]" << "\tTreadID: " << tid << "\tRuleId: " << rcmsg.ruleID << "\tRuleName: " << rcmsg.ruleName;
+    
+    if (!approval.compare("Fail"))
+        fs << "\tMessage: " << rcmsg.msg << std::endl;
+    else
+        fs << std::endl;
 
     return 0;
 }
