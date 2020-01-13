@@ -44,12 +44,24 @@ void TraceeImpl::trap()
         this->history.emplace_back();
         cp->getRegs(this->tid, &this->history.back().first.call_regs);
         this->rulemgr->beforeTrap(this->tid, this->history, this->ruleCheckMsgs);
+
+        if (orig_rax == SYS_execve || orig_rax == SYS_execveat)
+        {
+            extractParameter(orig_rax);
+        }
     }
     else
     {
         cp->getRegs(this->tid, &this->history.back().first.ret_regs);
-        extractParameter(orig_rax);
-        // TODO: parameter log
+        if (orig_rax != SYS_execve && orig_rax != SYS_execveat)
+        {
+            extractParameter(orig_rax);
+        }
+        else
+        {
+            this->history.back().second[ParameterIndex::Ret].value = paraReg(ParameterIndex::Ret);
+        }
+        
         this->rulemgr->afterTrap(this->tid, this->history, this->ruleCheckMsgs);
         this->callID++;
     }
@@ -59,6 +71,7 @@ void TraceeImpl::trap()
 
 void TraceeImpl::extractParameter(long sysnum)
 {
+    spdlog::debug("Extract Parameter for {}", sysnum);
     this->history.back().second = syscall_call_para_table[sysnum];
     int index = 0;
     for (auto & para : this->history.back().second)
@@ -67,6 +80,7 @@ void TraceeImpl::extractParameter(long sysnum)
         {
         case ParameterType::lvalue:
             para.value = paraReg(ParameterIndex(index));
+            spdlog::debug("Parameter {} lvalue {}", index, para.value);
             break;
         case ParameterType::pointer:
         {
@@ -74,6 +88,8 @@ void TraceeImpl::extractParameter(long sysnum)
             char * buf = new char[para.size];
             this->up->readBytesFrom(this->tid, reinterpret_cast<const char *>(paraReg(ParameterIndex(index))), buf, para.size);
             para.value = reinterpret_cast<long>(buf);
+
+            spdlog::debug("Parameter {} pointer", index);
             break;
         }
         case ParameterType::str:
@@ -81,6 +97,8 @@ void TraceeImpl::extractParameter(long sysnum)
             char * buf = new char[para.size];
             this->up->readStrFrom(this->tid, reinterpret_cast<const char *>(paraReg(ParameterIndex(index))), buf, para.size);
             para.value = reinterpret_cast<long>(buf);
+
+            spdlog::debug("Parameter {} str {}", index, buf);
             break;
         }
         case ParameterType::structp:
@@ -88,11 +106,14 @@ void TraceeImpl::extractParameter(long sysnum)
             char * buf = new char[para.size];
             this->up->readBytesFrom(this->tid, reinterpret_cast<const char *>(paraReg(ParameterIndex(index))), buf, para.size);
             para.value = reinterpret_cast<long>(buf);
+
+            spdlog::debug("Parameter {} structp", index);
             break;
         }
         case ParameterType::pArray:
         {
             // TODO
+            break;
         }
         case ParameterType::null:
             assert(0);
@@ -102,6 +123,7 @@ void TraceeImpl::extractParameter(long sysnum)
         }
         index++;
     }
+    spdlog::debug("Extract Parameter End {}", sysnum);
 }
 
 long TraceeImpl::paraReg(ParameterIndex index)

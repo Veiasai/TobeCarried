@@ -8,7 +8,10 @@
 
 #include <sys/utsname.h>
 
+
 namespace SAIL { namespace core {
+
+using namespace fmt;
 
 enum ParameterIndex
 {
@@ -35,7 +38,7 @@ struct Parameter
 {
     static Parameter lvalue() { return {ParameterType::lvalue, 0, 0}; }
     static Parameter pointer(ParameterIndex sizefrom) { return {ParameterType::pointer, sizefrom, 0}; }
-    static Parameter str() { return {ParameterType::str, 0, 0}; }
+    static Parameter str(long size) { return {ParameterType::str, size, 0}; }
     static Parameter structp(long fixed_size) { return {ParameterType::structp, fixed_size, 0}; }
     static Parameter pArray(long size) { return {ParameterType::pArray, size, 0}; }
     
@@ -44,10 +47,9 @@ struct Parameter
     long value;
 
     Parameter() : type(ParameterType::null) {}
-    Parameter(long value) : type(ParameterType::lvalue), size(0), value(value) {}
-    Parameter(long size, long value) : type(ParameterType::pointer), size(size), value(value) {}
     Parameter(ParameterType type, long size, long value) : type(type), size(size), value(value) {}
 };
+
 
 struct RuleCheckMsg
 {
@@ -69,7 +71,7 @@ struct WarnInfo {
     int callID;
 
     // TODO: add explanation to this warning
-    // e.g. vector<int> breakRules;  show the rules that be breaked;  
+    // e.g. vector<int> breakRules;  show the rules that are broken;  
 };
 
 using Parameters = std::vector<Parameter>;
@@ -80,7 +82,7 @@ using RuleCheckMsgs = std::vector<RuleCheckMsg>;
 const SystemcallParaTable syscall_call_para_table = {
     {Parameter::lvalue(), Parameter::lvalue(), Parameter::pointer(ParameterIndex::Ret), Parameter::lvalue()}, // {0, "read"}
     {Parameter::lvalue(), Parameter::lvalue(), Parameter::pointer(ParameterIndex::Ret), Parameter::lvalue()}, // {1, "write"}
-    {Parameter::lvalue(), Parameter::str(), Parameter::lvalue(), Parameter::lvalue()}, // {2, "open"}
+    {Parameter::lvalue(), Parameter::str(256), Parameter::lvalue(), Parameter::lvalue()}, // {2, "open"}
     {Parameter::lvalue(), Parameter::lvalue()}, // {3, "close"}
     {},// {4, "stat"},
     {},// {5, "fstat"},
@@ -137,7 +139,7 @@ const SystemcallParaTable syscall_call_para_table = {
     {},// {56, "clone"},
     {},// {57, "fork"},
     {},// {58, "vfork"},
-    {Parameter::lvalue(), Parameter::str(), Parameter::pArray(-1), Parameter::pArray(-1)},// {59, "execve"},
+    {Parameter::lvalue(), Parameter::str(256), Parameter::pArray(-1), Parameter::pArray(-1)},// {59, "execve"},
     {},// {60, "exit"},
     {},// {61, "wait4"},
     {},// {62, "kill"},
@@ -335,7 +337,7 @@ const SystemcallParaTable syscall_call_para_table = {
     {},// {254, "inotify_add_watch"},
     {},// {255, "inotify_rm_watch"},
     {},// {256, "migrate_pages"},
-    {Parameter::lvalue(), Parameter::lvalue(), Parameter::str(), Parameter::lvalue(), Parameter::lvalue()},// {257, "openat"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::str(256), Parameter::lvalue(), Parameter::lvalue()},// {257, "openat"},
     {},// {258, "mkdirat"},
     {},// {259, "mknodat"},
     {},// {260, "fchownat"},
