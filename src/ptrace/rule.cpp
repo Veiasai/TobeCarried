@@ -9,8 +9,8 @@ namespace SAIL
 namespace rule
 {
 
-RuleImpl::RuleImpl(int ID, int target_syscall, const std::string &name)
-    : ID(ID), target_syscall(target_syscall), name(name) {};
+RuleImpl::RuleImpl(int ID, int target_syscall, const std::string &name, std::shared_ptr<utils::Utils> up)
+    : ID(ID), target_syscall(target_syscall), name(name), up(up) {};
 
 core::RuleCheckMsg RuleImpl::check(const core::Parameters &sp)
 {
@@ -27,12 +27,10 @@ core::RuleCheckMsg RuleImpl::check(const core::Parameters &sp)
 
     for (const auto &rulevalue : rulevalues)
     {
-        if (rulevalue(sp))
+        if (!rulevalue(sp).approval)
         {
             rcm.approval = false;
-
-            // TODO: msg vary
-            rcm.msg = "matched";
+            rcm.msg = rulevalue(sp).msg;
             return rcm;
         }
     }
@@ -49,22 +47,26 @@ int RuleImpl::matchRe(core::ParameterIndex idx, const std::string &re)
 {
     const std::regex pattern(re);
 
-    rulevalues.emplace_back([idx, pattern](const core::Parameters &sp) -> bool {
-        return std::regex_match((char *)(sp[idx].value), pattern);
+    rulevalues.emplace_back([idx, pattern, re](const core::Parameters &sp) -> CheckInfo {
+        if (std::regex_match((char *)(sp[idx].value), pattern)) {
+            return CheckInfo({false, "Match! Config: " + re + ", Actual: " + (char *)(sp[idx].value)});
+        }
+        return CheckInfo({true, ""});
     });
     return 0;
 };
 
 int RuleImpl::matchBytes(core::ParameterIndex idx, const std::vector<unsigned char> &vc)
 {
-    rulevalues.emplace_back([idx, vc](const core::Parameters &sp) -> bool {
+    std::shared_ptr<utils::Utils> up = this->up;
+    rulevalues.emplace_back([idx, vc, up](const core::Parameters &sp) -> CheckInfo {
         char *str = (char *)sp[idx].value;
         long spsize = sp[idx].size;
         bool matched = false;
 
         if (vc.size() > spsize)
         {
-            return 0;
+            return CheckInfo({true, ""});
         }
         else
         {
@@ -83,54 +85,80 @@ int RuleImpl::matchBytes(core::ParameterIndex idx, const std::vector<unsigned ch
                     break;
             }
         }
-        return matched;
+        if (matched)
+        {
+            std::string configBytes;
+            std::string actualBytes;
+            up->formatBytes(vc, configBytes);
+            up->formatBytes(str, actualBytes);
+            return CheckInfo({false, "Match! Config: " + configBytes + ", Actual: " + actualBytes});
+        }
+        return CheckInfo({true, ""});
     });
 };
 
 int RuleImpl::equal(core::ParameterIndex idx, long value)
 {
-    rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> bool {
-        return (sp[idx].value == value);
+    rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> CheckInfo {
+        if (sp[idx].value == value) {
+            return CheckInfo({false, "Equal! Config: ==" + std::to_string(value) + ", Actual: " + std::to_string(sp[idx].value)});
+        }
+        return CheckInfo({true, ""});
     });
     return 0;
 };
 
 int RuleImpl::notEqual(core::ParameterIndex idx, long value)
 {
-    rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> bool {
-        return (sp[idx].value != value);
+    rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> CheckInfo {
+        if (sp[idx].value != value) {
+            return CheckInfo({false, "NotEqual! Config: !=" + std::to_string(value) + ", Actual: " + std::to_string(sp[idx].value)});
+        }
+        return CheckInfo({true, ""});
     });
     return 0;
 };
 
 int RuleImpl::greater(core::ParameterIndex idx, long value)
 {
-    rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> bool {
-        return (sp[idx].value > value);
+    rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> CheckInfo {
+        if (sp[idx].value > value) {
+            return CheckInfo({false, "Greater! Config: >" + std::to_string(value) + ", Actual: " + std::to_string(sp[idx].value)});
+        }
+        return CheckInfo({true, ""});
     });
     return 0;
 };
 
 int RuleImpl::notGreater(core::ParameterIndex idx, long value)
 {
-    rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> bool {
-        return (sp[idx].value <= value);
+    rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> CheckInfo {
+        if (sp[idx].value <= value) {
+            return CheckInfo({false, "NotGreater! Config: <=" + std::to_string(value) + ", Actual: " + std::to_string(sp[idx].value)});
+        }
+        return CheckInfo({true, ""});
     });
     return 0;
 };
 
 int RuleImpl::less(core::ParameterIndex idx, long value)
 {
-    rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> bool {
-        return (sp[idx].value < value);
+    rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> CheckInfo {
+        if (sp[idx].value < value) {
+            return CheckInfo({false, "Less! Config: <" + std::to_string(value) + ", Actual: " + std::to_string(sp[idx].value)});
+        }
+        return CheckInfo({true, ""});
     });
     return 0;
 };
 
 int RuleImpl::notLess(core::ParameterIndex idx, long value)
 {
-    rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> bool {
-        return (sp[idx].value >= value);
+    rulevalues.emplace_back([idx, value](const core::Parameters &sp) -> CheckInfo {
+        if (sp[idx].value >= value) {
+            return CheckInfo({false, "NotLess! Config: >=" + std::to_string(value) + ", Actual: " + std::to_string(sp[idx].value)});
+        }
+        return CheckInfo({true, ""});
     });
     return 0;
 };
