@@ -74,6 +74,11 @@ void TraceeImpl::extractParameter(long sysnum)
     spdlog::debug("Extract Parameter for {}", sysnum);
     this->history.back().second = syscall_call_para_table[sysnum];
     int index = 0;
+
+    if(this->history.back().second.size()==0){
+        spdlog::warn("{} not defined.", sysnum);
+    }
+
     for (auto & para : this->history.back().second)
     {
         switch (para.type)
