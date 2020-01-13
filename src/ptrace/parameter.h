@@ -11,8 +11,6 @@
 
 namespace SAIL { namespace core {
 
-using namespace fmt;
-
 enum ParameterIndex
 {
     Ret,
