@@ -27,10 +27,11 @@ core::RuleCheckMsg RuleImpl::check(const core::Parameters &sp)
 
     for (const auto &rulevalue : rulevalues)
     {
-        if (!rulevalue(sp).approval)
+        CheckInfo checkinfo = rulevalue(sp);
+        if (!checkinfo.approval)
         {
             rcm.approval = false;
-            rcm.msg = rulevalue(sp).msg;
+            rcm.msg = checkinfo.msg;
             return rcm;
         }
     }
