@@ -38,32 +38,8 @@ private:
     std::shared_ptr<rule::RuleManager> rulemgr;
     std::shared_ptr<Report> report;
 
-    // for buffering filename to insert into fdToFilename
-    char localFilename[MAX_FILENAME_SIZE];
-    // for buffering syscall id to check whether syscall returns
-    long lastSyscallID;
-
-    // file
-    void open();
-    void openat();
-    void read();
-    void write();
-
-    // net
-    void socket();
-    void connect();
-    void recvfrom();
-    void sendto();
-    void ioctl();
-
-    // clone
-    void clone();
-
-    // execve
-    void sysExecve();
-
-    // uname
-    void uname();
+    void extractParameter(long sysnum);
+    long paraReg(ParameterIndex index);
 public:
     TraceeImpl(int tid, std::shared_ptr<utils::Utils> up,
         std::shared_ptr<utils::CustomPtrace> cp,

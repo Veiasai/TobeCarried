@@ -1,5 +1,8 @@
 #!/bin/bash
 
 rm -rf logs
-./ptrace -l debug -o logs/log.txt -f ../../benchmark/clone \
-    -c example.yml -r ./re --args=testFile -d childLog
+rm ./re
+rm ./re2
+
+./ptrace -l debug -o logs/log.txt -f ../../benchmark/tcpcli \
+    -c example.yml -r ./re --args=ctptest,22 -d childLog -a ./re2
