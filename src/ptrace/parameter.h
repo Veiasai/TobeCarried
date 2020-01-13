@@ -2,11 +2,23 @@
 
 #include <vector>
 #include <stdio.h>
+#include <signal.h>
+#include <poll.h>
 #include <sys/user.h>
+#include <sys/stat.h>
+#include <sys/select.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <syscall.h>
+#include <linux/futex.h>
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/basic_file_sink.h"
 
 #include <sys/utsname.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <sys/wait.h>
+#include <sys/sysinfo.h>
 
 
 namespace SAIL { namespace core {
@@ -28,6 +40,7 @@ enum ParameterType
     lvalue,
     str,    // end of 0
     structp, // fixed size
+    structpp, // fixed size
     pArray, // char * p[]
     null,
 };
@@ -38,6 +51,7 @@ struct Parameter
     static Parameter pointer(ParameterIndex sizefrom) { return {ParameterType::pointer, sizefrom, 0}; }
     static Parameter str(long size) { return {ParameterType::str, size, 0}; }
     static Parameter structp(long fixed_size) { return {ParameterType::structp, fixed_size, 0}; }
+    static Parameter structpp(long fixed_size) { return {ParameterType::structpp, fixed_size, 0}; }
     static Parameter pArray(long size) { return {ParameterType::pArray, size, 0}; }
     
     ParameterType type;
@@ -77,31 +91,35 @@ using SystemcallParaTable = std::vector<Parameters>;
 using Histories = std::vector<std::pair<Systemcall, Parameters>>;
 using RuleCheckMsgs = std::vector<RuleCheckMsg>;
 
+using mystat = struct stat;
+using mysigaction = struct sigaction;
+using mysysinfo = struct sysinfo;
+
 const SystemcallParaTable syscall_call_para_table = {
     {Parameter::lvalue(), Parameter::lvalue(), Parameter::pointer(ParameterIndex::Ret), Parameter::lvalue()}, // {0, "read"}
     {Parameter::lvalue(), Parameter::lvalue(), Parameter::pointer(ParameterIndex::Ret), Parameter::lvalue()}, // {1, "write"}
     {Parameter::lvalue(), Parameter::str(256), Parameter::lvalue(), Parameter::lvalue()}, // {2, "open"}
     {Parameter::lvalue(), Parameter::lvalue()}, // {3, "close"}
-    {},// {4, "stat"},
-    {},// {5, "fstat"},
-    {},// {6, "lstat"},
-    {},// {7, "poll"},
-    {},// {8, "lseek"},
-    {},// {9, "mmap"},
-    {},// {10, "mprotect"},
-    {},// {11, "munmap"},
-    {},// {12, "brk"},
-    {},// {13, "rt_sigaction"},
-    {},// {14, "rt_sigprocmask"},
+    {Parameter::lvalue(), Parameter::str(256), Parameter::structp(sizeof(mystat))},// {4, "stat"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::structp(sizeof(mystat))},// {5, "fstat"},
+    {Parameter::lvalue(), Parameter::str(256), Parameter::structp(sizeof(mystat))},// {6, "lstat"},
+    {Parameter::lvalue(), Parameter::structp(sizeof(pollfd)), Parameter::lvalue(), Parameter::lvalue()},// {7, "poll"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue()},// {8, "lseek"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue()},// {9, "mmap"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue()},// {10, "mprotect"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue()},// {11, "munmap"},
+    {Parameter::lvalue(), Parameter::lvalue()},// {12, "brk"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::structp(sizeof(mysigaction)), Parameter::structp(sizeof(mysigaction))},// {13, "rt_sigaction"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::structp(sizeof(sigset_t)), Parameter::structp(sizeof(sigset_t)), Parameter::lvalue()},// {14, "rt_sigprocmask"},
     {},// {15, "rt_sigreturn"},
     {Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue()},// {16, "ioctl"},
     {},// {17, "pread64"},
     {},// {18, "pwrite64"},
     {},// {19, "readv"},
     {},// {20, "writev"},
-    {},// {21, "access"},
-    {},// {22, "pipe"},
-    {},// {23, "select"},
+    {Parameter::lvalue(), Parameter::str(256), Parameter::lvalue()},// {21, "access"},
+    {Parameter::lvalue(), Parameter::structp(sizeof(int[2]))},// {22, "pipe"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::structp(sizeof(fd_set)), Parameter::structp(sizeof(fd_set)), Parameter::structp(sizeof(fd_set)), Parameter::structp(sizeof(timeval))},// {23, "select"},
     {},// {24, "sched_yield"},
     {},// {25, "mremap"},
     {},// {26, "msync"},
@@ -110,16 +128,16 @@ const SystemcallParaTable syscall_call_para_table = {
     {},// {29, "shmget"},
     {},// {30, "shmat"},
     {},// {31, "shmctl"},
-    {},// {32, "dup"},
-    {},// {33, "dup2"},
+    {Parameter::lvalue(), Parameter::lvalue()},// {32, "dup"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue()},// {33, "dup2"},
     {},// {34, "pause"},
     {},// {35, "nanosleep"},
     {},// {36, "getitimer"},
     {},// {37, "alarm"},
     {},// {38, "setitimer"},
-    {},// {39, "getpid"},
+    {Parameter::lvalue()},// {39, "getpid"},
     {},// {40, "sendfile"},
-    {Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue(),  Parameter::lvalue()},// {41, "socket"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue()},// {41, "socket"},
     {Parameter::lvalue(), Parameter::lvalue(), Parameter::pointer(ParameterIndex::Third), Parameter::lvalue()}, // {42, "connect"},
     {},// {43, "accept"},
     {Parameter::lvalue(), Parameter::lvalue(), Parameter::pointer(ParameterIndex::Third), Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue()},// {44, "sendto"},
@@ -129,17 +147,17 @@ const SystemcallParaTable syscall_call_para_table = {
     {},// {48, "shutdown"},
     {},// {49, "bind"},
     {},// {50, "listen"},
-    {},// {51, "getsockname"},
-    {},// {52, "getpeername"},
-    {},// {53, "socketpair"},
-    {},// {54, "setsockopt"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::structp(sizeof(sockaddr)), Parameter::structp(sizeof(socklen_t))},// {51, "getsockname"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::structp(sizeof(sockaddr)), Parameter::structp(sizeof(socklen_t))},// {52, "getpeername"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue(), Parameter::structp(sizeof(int[2]))},// {53, "socketpair"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue(), Parameter::pointer(ParameterIndex::Fifth), Parameter::lvalue()},// {54, "setsockopt"},
     {},// {55, "getsockopt"},
-    {},// {56, "clone"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue()},// {56, "clone"},
     {},// {57, "fork"},
     {},// {58, "vfork"},
     {Parameter::lvalue(), Parameter::str(256), Parameter::pArray(-1), Parameter::pArray(-1)},// {59, "execve"},
     {},// {60, "exit"},
-    {},// {61, "wait4"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::structp(sizeof(int)), Parameter::lvalue(), Parameter::structp(sizeof(rusage))},// {61, "wait4"},
     {},// {62, "kill"},
     {Parameter::lvalue(), Parameter::structp(sizeof(utsname))},// {63, "uname"},
     {},// {64, "semget"},
@@ -150,7 +168,7 @@ const SystemcallParaTable syscall_call_para_table = {
     {},// {69, "msgsnd"},
     {},// {70, "msgrcv"},
     {},// {71, "msgctl"},
-    {},// {72, "fcntl"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue()},// {72, "fcntl"},
     {},// {73, "flock"},
     {},// {74, "fsync"},
     {},// {75, "fdatasync"},
@@ -175,20 +193,20 @@ const SystemcallParaTable syscall_call_para_table = {
     {},// {94, "lchown"},
     {},// {95, "umask"},
     {},// {96, "gettimeofday"},
-    {},// {97, "getrlimit"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::structp(sizeof(rlimit))},// {97, "getrlimit"},
     {},// {98, "getrusage"},
-    {},// {99, "sysinfo"},
+    {Parameter::lvalue(), Parameter::structp(sizeof(mysysinfo))},// {99, "sysinfo"},
     {},// {100, "times"},
     {},// {101, "ptrace"},
-    {},// {102, "getuid"},
+    {Parameter::lvalue()},// {102, "getuid"},
     {},// {103, "syslog"},
-    {},// {104, "getgid"},
+    {Parameter::lvalue()},// {104, "getgid"},
     {},// {105, "setuid"},
     {},// {106, "setgid"},
-    {},// {107, "geteuid"},
-    {},// {108, "getegid"},
+    {Parameter::lvalue()},// {107, "geteuid"},
+    {Parameter::lvalue()},// {108, "getegid"},
     {},// {109, "setpgid"},
-    {},// {110, "getppid"},
+    {Parameter::lvalue()},// {110, "getppid"},
     {},// {111, "getpgrp"},
     {},// {112, "setsid"},
     {},// {113, "setreuid"},
@@ -236,7 +254,7 @@ const SystemcallParaTable syscall_call_para_table = {
     {},// {155, "pivot_root"},
     {},// {156, "_sysctl"},
     {},// {157, "prctl"},
-    {},// {158, "arch_prctl"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue()},// {158, "arch_prctl"},
     {},// {159, "adjtimex"},
     {},// {160, "setrlimit"},
     {},// {161, "chroot"},
@@ -280,7 +298,7 @@ const SystemcallParaTable syscall_call_para_table = {
     {},// {199, "fremovexattr"},
     {},// {200, "tkill"},
     {},// {201, "time"},
-    {},// {202, "futex"},
+    {Parameter::lvalue(), Parameter::structp(sizeof(int)), Parameter::lvalue(), Parameter::lvalue(), Parameter::structp(sizeof(timespec)), Parameter::structp(sizeof(int)), Parameter::lvalue()},// {202, "futex"},
     {},// {203, "sched_setaffinity"},
     {},// {204, "sched_getaffinity"},
     {},// {205, "set_thread_area"},
@@ -296,7 +314,7 @@ const SystemcallParaTable syscall_call_para_table = {
     {},// {215, "epoll_wait_old"},
     {},// {216, "remap_file_pages"},
     {},// {217, "getdents64"},
-    {},// {218, "set_tid_address"},
+    {Parameter::lvalue(), Parameter::structp(sizeof(int))},// {218, "set_tid_address"},
     {},// {219, "restart_syscall"},
     {},// {220, "semtimedop"},
     {},// {221, "fadvise64"},
@@ -312,7 +330,7 @@ const SystemcallParaTable syscall_call_para_table = {
     {},// {231, "exit_group"},
     {},// {232, "epoll_wait"},
     {},// {233, "epoll_ctl"},
-    {},// {234, "tgkill"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue(), Parameter::lvalue()},// {234, "tgkill"},
     {},// {235, "utimes"},
     {},// {236, "vserver"},
     {},// {237, "mbind"},
@@ -351,8 +369,8 @@ const SystemcallParaTable syscall_call_para_table = {
     {},// {270, "pselect6"},
     {},// {271, "ppoll"},
     {},// {272, "unshare"},
-    {},// {273, "set_robust_list"},
-    {},// {274, "get_robust_list"},
+    {Parameter::lvalue(), Parameter::lvalue(), Parameter::structpp(sizeof(robust_list_head)), Parameter::structp(sizeof(size_t))},// {273, "set_robust_list"},
+    {Parameter::lvalue(), Parameter::structp(sizeof(robust_list_head)), Parameter::lvalue()},// {274, "get_robust_list"},
     {},// {275, "splice"},
     {},// {276, "tee"},
     {},// {277, "sync_file_range"},
@@ -371,7 +389,7 @@ const SystemcallParaTable syscall_call_para_table = {
     {},// {290, "eventfd2"},
     {},// {291, "epoll_create1"},
     {},// {292, "dup3"},
-    {},// {293, "pipe2"},
+    {Parameter::lvalue(), Parameter::structp(sizeof(int[2])), Parameter::lvalue()},// {293, "pipe2"},
     {},// {294, "inotify_init1"},
     {},// {295, "preadv"},
     {},// {296, "pwritev"},
