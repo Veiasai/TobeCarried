@@ -15,15 +15,6 @@ RuleImpl::RuleImpl(int ID, int target_syscall, const std::string &name, std::sha
 core::RuleCheckMsg RuleImpl::check(const core::Parameters &sp)
 {
     core::RuleCheckMsg rcm = {true, ID, name, ""};
-    spdlog::debug("rule {}:  ret {}, p1 {}, p2 {}, p3 {}, p4 {}, p5 {}, p6 {}", 
-        ID, 
-        sp[core::ParameterIndex::Ret].type,
-        sp[core::ParameterIndex::First].type,
-        sp[core::ParameterIndex::Second].type,
-        sp[core::ParameterIndex::Third].type,
-        sp[core::ParameterIndex::Fourth].type,
-        sp[core::ParameterIndex::Fifth].type,
-        sp[core::ParameterIndex::Sixth].type);
 
     for (const auto &rulevalue : rulevalues)
     {
