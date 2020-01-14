@@ -5,6 +5,7 @@
 
 #include "fileWhitelist.h"
 #include "networkMonitor.h"
+#include "structDecoder.h"
 
 namespace SAIL
 {
@@ -111,14 +112,13 @@ void YamlRuleManager::ruleInit(const YAML::Node &yaml)
 void YamlRuleManager::pluginInit(const YAML::Node &yaml)
 {
     // TODO
-    try {
-        plugins["FileWhitelist"] = std::make_unique<FileWhitelist>(yaml["filewhitelist"], this->up, this->report);
-    }
-    catch (std::exception & e) {}
-    try {
-        plugins["Network"] = std::make_unique<NetworkMonitor>(yaml["network"], this->up, this->report);
-    }
-    catch (std::exception & e) {}
+    
+    plugins["FileWhitelist"] = std::make_unique<FileWhitelist>(yaml["filewhitelist"], this->up, this->report);
+
+    plugins["Network"] = std::make_unique<NetworkMonitor>(yaml["network"], this->up, this->report);
+
+    plugins["StructDecoder"] = std::make_unique<StructDecoder>(yaml["structDecoder"], this->up, this->report);
+    
 }
 
 
