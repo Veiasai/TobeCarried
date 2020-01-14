@@ -169,6 +169,43 @@ int UtilsImpl::handleEscape(const std::string &str, std::string &regStr)
     return 0;
 }
 
+int UtilsImpl::formatBytes(const std::vector<unsigned char> &vc, std::string &formattedBytes)
+{
+    formattedBytes = "[";
+    for (auto byte : vc)
+    {
+        formattedBytes += "0x";
+        int ib = (int)byte;
+        formattedBytes += (ib / 16 >= 10) ? (char)('A' + (ib / 16 - 10)) : (char)('0' + ib / 16);
+        formattedBytes += (ib % 16 >= 10) ? (char)('A' + (ib % 16 - 10)) : (char)('0' + ib % 16);
+        formattedBytes += ", ";
+    }
+    // drop last 2 redundant chars (, )
+    formattedBytes.pop_back();
+    formattedBytes.pop_back();
+    formattedBytes += "]";
+    return 0;
+}
+
+int UtilsImpl::formatBytes(const std::string &str, std::string &formattedBytes)
+{
+    formattedBytes = "[";
+    for (auto byte : str)
+    {
+        formattedBytes += "0x";
+        int ib = (int)byte;
+        formattedBytes += (ib / 16 >= 10) ? (char)('A' + (ib / 16 - 10)) : (char)('0' + ib / 16);
+        formattedBytes += (ib % 16 >= 10) ? (char)('A' + (ib % 16 - 10)) : (char)('0' + ib % 16);
+        formattedBytes += ", ";
+    }
+    // drop last 2 redundant chars (, )
+    formattedBytes.pop_back();
+    formattedBytes.pop_back();
+    formattedBytes += "]";
+    return 0;
+}
+
+
 long CustomPtraceImpl::peekUser(int tid, long addr)
 {
     return ptrace(PTRACE_PEEKUSER, tid, addr, NULL);

@@ -44,6 +44,8 @@ public:
     virtual int getFilenamesByProc(int tid,std::set<std::string> &fileset) = 0;
     virtual int strset2file(const std::string &filename, const std::set<std::string> &fileset) = 0;
     virtual int handleEscape(const std::string &str, std::string &regStr) = 0;
+    virtual int formatBytes(const std::vector<unsigned char> &vc, std::string &formattedBytes) = 0;
+    virtual int formatBytes(const std::string &str, std::string &formattedBytes) = 0;
 };
 
 class UtilsImpl : public Utils
@@ -60,6 +62,8 @@ public:
     virtual int getFilenamesByProc(int tid,std::set<std::string> &fileset) override;
     virtual int strset2file(const std::string &filename, const std::set<std::string> &fileset) override;
     virtual int handleEscape(const std::string &str, std::string &regStr) override;
+    virtual int formatBytes(const std::vector<unsigned char> &vc, std::string &formattedBytes) override;
+    virtual int formatBytes(const std::string &str, std::string &formattedBytes) override;
 };
 
 } // namespace utils

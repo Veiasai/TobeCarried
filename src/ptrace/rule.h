@@ -2,8 +2,10 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 #include <functional>
 
+#include "utils.h"
 #include "parameter.h"
 
 namespace SAIL { namespace rule {
@@ -13,6 +15,12 @@ struct RuleInfo
     int target_syscall;
     int ruleID;
     std::string name;
+};
+
+struct CheckInfo
+{
+    bool approval;
+    std::string msg;
 };
 
 class Rule
@@ -37,9 +45,10 @@ private:
     int ID;
     int target_syscall;
     std::string name;
-    std::vector<std::function<bool(const core::Parameters & sp)>> rulevalues;
+    std::shared_ptr<utils::Utils> up;
+    std::vector<std::function<CheckInfo(const core::Parameters & sp)>> rulevalues;
 public:
-    RuleImpl(int ID, int target_syscall, const std::string & name);
+    RuleImpl(int ID, int target_syscall, const std::string & name, std::shared_ptr<utils::Utils> up);
     virtual ~RuleImpl() {};
     virtual core::RuleCheckMsg check(const core::Parameters & sp) override;
     virtual RuleInfo info() override;

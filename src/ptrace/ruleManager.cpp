@@ -31,7 +31,7 @@ void YamlRuleManager::ruleInit(const YAML::Node &yaml)
         std::string name = (*ruleNode)["name"].as<std::string>();
         const YAML::Node specs = (*ruleNode)["specs"];
 
-        std::unique_ptr<Rule> rule = std::make_unique<RuleImpl>(id, sysnum, name);
+        std::unique_ptr<Rule> rule = std::make_unique<RuleImpl>(id, sysnum, name, up);
         for (auto spec = specs.begin(); spec != specs.end(); spec++)
         {
             std::string action = (*spec)["action"].as<std::string>();
