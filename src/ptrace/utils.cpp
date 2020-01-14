@@ -9,8 +9,14 @@ namespace SAIL
 {
 namespace utils
 {
-UtilsImpl::UtilsImpl(std::shared_ptr<CustomPtrace> _cp) : cp(_cp)
+UtilsImpl::UtilsImpl(std::shared_ptr<CustomPtrace> _cp) : cp(_cp),
+     syscall_call_para_table(core::syscall_call_para_table), syscall_assist(core::syscall_assist)
 {
+    // TODO: optimize here
+    for (auto & sysc : syscall_assist)
+    {
+        syscall_assist_r.insert(std::make_pair(sysc.second, sysc.first));
+    }
 }
 
 int UtilsImpl::readStrFrom(int tid, const char *p, char *buf, size_t s)
@@ -205,6 +211,46 @@ int UtilsImpl::formatBytes(const std::string &str, std::string &formattedBytes)
     return 0;
 }
 
+int UtilsImpl::sysname2num(const std::string & name, long & id)
+{
+    auto it = this->syscall_assist_r.find(name);
+    if (it != this->syscall_assist_r.end())
+    {
+        id = it->second;
+        return 0;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+int UtilsImpl::sysnum2str(long id, std::string & name)
+{
+    auto it = this->syscall_assist.find(id);
+    if (it != this->syscall_assist.end())
+    {
+        name = it->second;
+        return 0;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+int UtilsImpl::sysnum2parav(long id, core::Parameters& param)
+{
+    if (id < 0 || id >= syscall_call_para_table.size())
+    {
+        return -1;
+    }
+    else
+    {
+        param = syscall_call_para_table[id];
+        return 0;
+    }
+}
 
 long CustomPtraceImpl::peekUser(int tid, long addr)
 {

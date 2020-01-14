@@ -5,7 +5,7 @@
 
 namespace SAIL
 {
-namespace SYSCALL
+namespace core
 {
 const std::map<long, std::string> syscall_assist = {
     {0, "read"},
