@@ -1,6 +1,7 @@
 #include "ruleManager.h"
 
 #include <iostream>
+#include "spdlog/spdlog.h"
 
 #include "fileWhitelist.h"
 #include "networkMonitor.h"
@@ -26,12 +27,38 @@ void YamlRuleManager::ruleInit(const YAML::Node &yaml)
 {
     for (auto ruleNode = yaml.begin(); ruleNode != yaml.end(); ruleNode++)
     {
-        int sysnum = (*ruleNode)["sysnum"].as<int>();
+        long sysnum = 0;
+        std::string sysname;
+        if ((*ruleNode)["sysnum"].IsDefined())
+        {
+            sysnum = (*ruleNode)["sysnum"].as<long>();
+            int ret = this->up->sysnum2str(sysnum, sysname);
+            if (ret != 0)
+            {
+                throw std::logic_error("undefined sysnum");
+            }
+        }
+        else if ((*ruleNode)["sysname"].IsDefined())
+        {
+            sysname = (*ruleNode)["sysname"].as<std::string>();
+            int ret = this->up->sysname2num(sysname, sysnum);
+            if (ret != 0)
+            {
+                throw std::logic_error("undefined sysname");
+            }
+        }
+        else
+        {
+            throw std::logic_error("invalid rule format: miss sysnum or sysname");
+        }
+        
         int id = (*ruleNode)["id"].as<int>();
         std::string name = (*ruleNode)["name"].as<std::string>();
         const YAML::Node specs = (*ruleNode)["specs"];
 
         std::unique_ptr<Rule> rule = std::make_unique<RuleImpl>(id, sysnum, name, up);
+
+        spdlog::debug("Load Rule id: {} name: {} sysnum: {} sysname: {}", id, name, sysnum, sysname);
         for (auto spec = specs.begin(); spec != specs.end(); spec++)
         {
             std::string action = (*spec)["action"].as<std::string>();
