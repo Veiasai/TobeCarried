@@ -15,15 +15,6 @@ RuleImpl::RuleImpl(int ID, int target_syscall, const std::string &name, std::sha
 core::RuleCheckMsg RuleImpl::check(const core::Parameters &sp)
 {
     core::RuleCheckMsg rcm = {true, ID, name, ""};
-    spdlog::debug("rule {}:  ret {}, p1 {}, p2 {}, p3 {}, p4 {}, p5 {}, p6 {}", 
-        ID, 
-        sp[core::ParameterIndex::Ret].type,
-        sp[core::ParameterIndex::First].type,
-        sp[core::ParameterIndex::Second].type,
-        sp[core::ParameterIndex::Third].type,
-        sp[core::ParameterIndex::Fourth].type,
-        sp[core::ParameterIndex::Fifth].type,
-        sp[core::ParameterIndex::Sixth].type);
 
     for (const auto &rulevalue : rulevalues)
     {
@@ -59,8 +50,7 @@ int RuleImpl::matchRe(core::ParameterIndex idx, const std::string &re)
 
 int RuleImpl::matchBytes(core::ParameterIndex idx, const std::vector<unsigned char> &vc)
 {
-    std::shared_ptr<utils::Utils> up = this->up;
-    rulevalues.emplace_back([idx, vc, up](const core::Parameters &sp) -> CheckInfo {
+    rulevalues.emplace_back([idx, vc, this](const core::Parameters &sp) -> CheckInfo {
         char *str = (char *)sp[idx].value;
         long spsize = sp[idx].size;
         bool matched = false;
@@ -90,8 +80,8 @@ int RuleImpl::matchBytes(core::ParameterIndex idx, const std::vector<unsigned ch
         {
             std::string configBytes;
             std::string actualBytes;
-            up->formatBytes(vc, configBytes);
-            up->formatBytes(str, actualBytes);
+            this->up->formatBytes(vc, configBytes);
+            this->up->formatBytes(str, actualBytes);
             return CheckInfo({false, "Match! Config: " + configBytes + ", Actual: " + actualBytes});
         }
         return CheckInfo({true, ""});

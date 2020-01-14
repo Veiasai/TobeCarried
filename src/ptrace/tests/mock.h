@@ -32,6 +32,11 @@ public:
     MOCK_METHOD(int, getFilenamesByProc, (int tid,std::set<std::string> &fileset), (override));
     MOCK_METHOD(int, strset2file, (const std::string &filename, const std::set<std::string> &fileset), (override));
     MOCK_METHOD(int, handleEscape, (const std::string &str, std::string &regStr), (override));
+    MOCK_METHOD(int, formatBytes, (const std::vector<unsigned char> &vc, std::string &formattedBytes), (override));
+    MOCK_METHOD(int, formatBytes, (const std::string &str, std::string &formattedBytes), (override));
+    MOCK_METHOD(int, sysname2num, (const std::string &, long &), (override));
+    MOCK_METHOD(int, sysnum2str, (long, std::string &), (override));
+    MOCK_METHOD(int, sysnum2parav, (long, core::Parameters&), (override));
 };
 
 class MockRuleManager : public RuleManager
