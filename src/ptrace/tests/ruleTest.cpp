@@ -21,8 +21,12 @@ public:
     std::shared_ptr<MockUtils> up;
     std::shared_ptr<MockRuleManager> rulemgr;
     std::shared_ptr<MockReport> report;
+
     RuleFixture() { 
-        
+        cp = std::make_shared<MockCustomPtrace>();
+        up = std::make_shared<MockUtils>();
+        rulemgr = std::make_shared<MockRuleManager>();
+        report = std::make_shared<MockReport>();
     } 
 
     void SetUp( ) { 
@@ -49,14 +53,17 @@ TEST_F(RuleFixture, match_bytes_in_open_filename)
     rule.matchBytes(ParameterIndex::First, bytes);
     Parameters sp;
     sp.resize(7);
-    sp[ParameterIndex::First] = Parameter(ParameterType::str, bytes.size(), reinterpret_cast<long>(fileNameBuf));
+    sp[ParameterIndex::First] = Parameter(ParameterType::pointer, bytes.size(), reinterpret_cast<long>(fileNameBuf));
+    
+    EXPECT_CALL(*up, formatBytes(bytes, _)).Times(1);
+    EXPECT_CALL(*up, formatBytes(fileName, _)).Times(1);
     RuleCheckMsg msg = rule.check(sp);
-
     EXPECT_EQ(msg.approval, false);
     EXPECT_EQ(msg.ruleID, ID);
 
     fileNameBuf[1] = 'x';
-
+    EXPECT_CALL(*up, formatBytes(bytes, _)).Times(0);
+    EXPECT_CALL(*up, formatBytes(fileName, _)).Times(0);
     RuleCheckMsg msg2 = rule.check(sp);
 
     EXPECT_EQ(msg2.approval, true);

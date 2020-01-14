@@ -50,8 +50,7 @@ int RuleImpl::matchRe(core::ParameterIndex idx, const std::string &re)
 
 int RuleImpl::matchBytes(core::ParameterIndex idx, const std::vector<unsigned char> &vc)
 {
-    std::shared_ptr<utils::Utils> up = this->up;
-    rulevalues.emplace_back([idx, vc, up](const core::Parameters &sp) -> CheckInfo {
+    rulevalues.emplace_back([idx, vc, this](const core::Parameters &sp) -> CheckInfo {
         char *str = (char *)sp[idx].value;
         long spsize = sp[idx].size;
         bool matched = false;
@@ -81,8 +80,8 @@ int RuleImpl::matchBytes(core::ParameterIndex idx, const std::vector<unsigned ch
         {
             std::string configBytes;
             std::string actualBytes;
-            up->formatBytes(vc, configBytes);
-            up->formatBytes(str, actualBytes);
+            this->up->formatBytes(vc, configBytes);
+            this->up->formatBytes(str, actualBytes);
             return CheckInfo({false, "Match! Config: " + configBytes + ", Actual: " + actualBytes});
         }
         return CheckInfo({true, ""});
