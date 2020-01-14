@@ -168,6 +168,12 @@ int UtilsImpl::handleEscape(const std::string &str, std::string &regStr)
             case '\\':
                 regStr.append("\\\\");
                 break;
+            case '(':
+                regStr.append("\\(");
+                break;
+            case ')':
+                regStr.append("\\)");
+                break;
             default:
                 regStr.push_back(str[i]);
         }
