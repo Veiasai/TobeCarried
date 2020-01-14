@@ -36,7 +36,9 @@ void TraceeImpl::trap()
     // grab syscall id
     long orig_rax = cp->peekUser(this->tid, 8 * ORIG_RAX);
     // syscall number to name
-    std::string syscallName = SAIL::SYSCALL::syscall_assist.at(orig_rax);
+    std::string syscallName;
+    int ret = this->up->sysnum2str(orig_rax, syscallName);
+    assert(ret == 0);
     spdlog::info("[tid: {}] [syscall: {}] calling {}", this->tid, syscallName, this->iscalling ? "in" : "out");
 
     if (this->iscalling)
@@ -72,13 +74,14 @@ void TraceeImpl::trap()
 void TraceeImpl::extractParameter(long sysnum)
 {
     spdlog::debug("Extract Parameter for {}", sysnum);
-    this->history.back().second = syscall_call_para_table[sysnum];
-    int index = 0;
+    int ret = this->up->sysnum2parav(sysnum, this->history.back().second);
+    assert(ret == 0);
 
     if(this->history.back().second.size()==0){
         spdlog::warn("{} not defined.", sysnum);
     }
 
+    int index = 0;
     for (auto & para : this->history.back().second)
     {
         switch (para.type)
