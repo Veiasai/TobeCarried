@@ -120,7 +120,25 @@ void TraceeImpl::extractParameter(long sysnum)
         }
         case ParameterType::pArray:
         {
-            // TODO
+            // fixed size.
+            spdlog::debug("Parameter {} strArray", index);
+            char ** value = new char *[24];
+            char ** t_p = reinterpret_cast<char **>(paraReg(ParameterIndex(index)));
+            for (int i=0;i<24;i++)
+            {
+                char * p = 0;
+                // fetch char * . it works in tid address space. so ptrace read twice.
+                this->up->readBytesFrom(this->tid, reinterpret_cast<char *>(t_p + i), reinterpret_cast<char *>(&p), 8);
+                if (p == 0)
+                {
+                    // end of array
+                    break;
+                }
+                value[i] = new char[128];
+                this->up->readStrFrom(this->tid, p, value[i], 128);
+                spdlog::debug("str{}: {}", i, value[i]);
+            }
+
             break;
         }
         case ParameterType::null:
