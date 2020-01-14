@@ -19,6 +19,8 @@
 #include <sys/resource.h>
 #include <sys/wait.h>
 #include <sys/sysinfo.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
 
 
 namespace SAIL { namespace core {
