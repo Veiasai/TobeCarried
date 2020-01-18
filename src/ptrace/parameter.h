@@ -60,8 +60,11 @@ struct Parameter
     long size;  // size of object pointed
     long value;
 
+    std::shared_ptr<char> buf; // using for pointer, str, structp
+    std::vector<std::string> value_vector; // using for pArray
+
     Parameter() : type(ParameterType::null) {}
-    Parameter(ParameterType type, long size, long value) : type(type), size(size), value(value) {}
+    Parameter(ParameterType type, long size, long value) : type(type), size(size), value(value), buf(nullptr), value_vector() {}
 };
 
 
