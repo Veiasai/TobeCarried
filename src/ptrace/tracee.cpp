@@ -139,9 +139,9 @@ void TraceeImpl::extractParameter(long sysnum)
                 }
                 // value[i] = new char[128];
                 std::string vstring(128,'\0');
-                (para.value_vector).push_back(vstring); 
                 this->up->readStrFrom(this->tid, p, const_cast<char*>(vstring.c_str()), 128);
-                spdlog::debug("str{}: {}", i, const_cast<char*>(vstring.c_str()));
+                (para.value_vector).push_back(std::move(vstring)); 
+                spdlog::debug("str{}: {}", i, (para.value_vector)[i].c_str());
             }
 
             break;
