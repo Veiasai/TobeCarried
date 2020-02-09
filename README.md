@@ -1,4 +1,5 @@
-# 交易系统开发
+# TobeCarried
 
-- 接入CTP柜台系统
-- 收割韭菜
+- 静态分析
+- Ptrace
+- Yaml
